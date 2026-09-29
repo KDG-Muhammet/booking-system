@@ -1,4 +1,10 @@
+import { useState } from "react";
+import Modal from "../../components/ui/Modal";
+import NewAppointmentForm from "../../components/ui/NewAppointmentForm";
+
 function Dashboard() {
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
   const appointments = [
     {
       time: "09:00",
@@ -38,7 +44,10 @@ function Dashboard() {
           </p>
         </div>
 
-        <button className="rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700">
+        <button
+          onClick={() => setIsModalOpen(true)}
+          className="rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700"
+        >
           + Nieuwe afspraak
         </button>
       </div>
@@ -191,6 +200,14 @@ function Dashboard() {
           ))}
         </div>
       </div>
+
+      <Modal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        title="Nieuwe afspraak"
+      >
+        <NewAppointmentForm />
+      </Modal>
     </div>
   );
 }
