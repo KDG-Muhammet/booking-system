@@ -206,7 +206,7 @@ function Dashboard() {
         onClose={() => setIsModalOpen(false)}
         title="Nieuwe afspraak"
       >
-        <NewAppointmentForm />
+        <NewAppointmentForm onClose={() => setIsModalOpen(false)} />
       </Modal>
     </div>
   );
