@@ -1,9 +1,12 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm, type SubmitHandler } from "react-hook-form";
 import { z } from "zod";
+import type { Appointment } from "../../types/appointment";
+import { services } from "../../services/serviceData";
 
 interface NewAppointmentFormProps {
   onClose: () => void;
+  onAppointmentCreated: (appointment: Appointment) => void;
 }
 
 const schema = z.object({
@@ -16,7 +19,10 @@ const schema = z.object({
 
 type FormFields = z.infer<typeof schema>;
 
-function NewAppointmentForm({ onClose }: NewAppointmentFormProps) {
+function NewAppointmentForm({
+  onClose,
+  onAppointmentCreated,
+}: NewAppointmentFormProps) {
   // destructure useForm hook to get the register and connect input fields to react hook form
   const {
     register,
@@ -37,6 +43,18 @@ function NewAppointmentForm({ onClose }: NewAppointmentFormProps) {
   const onSubmit: SubmitHandler<FormFields> = async (data) => {
     try {
       await new Promise((resolve) => setTimeout(resolve, 1000));
+
+      const newAppointment: Appointment = {
+        id: Date.now(),
+        customer: data.customerName,
+        serviceId: Number(data.service),
+        date: data.date,
+        time: data.time,
+        notes: data.notes,
+        status: "Bevestigd",
+      };
+      onAppointmentCreated(newAppointment);
+
       console.log(data);
       onClose();
     } catch (error) {
@@ -84,9 +102,13 @@ function NewAppointmentForm({ onClose }: NewAppointmentFormProps) {
             Selecteer een dienst
           </option>
 
-          <option value="1">Knipbeurt - €25</option>
-          <option value="2">Consultatie - €40</option>
-          <option value="3">Baard + Knipbeurt - €35</option>
+          {services
+            .filter((service) => service.active)
+            .map((service) => (
+              <option key={service.id} value={service.id}>
+                {service.name} - €{service.price}
+              </option>
+            ))}
         </select>
         <div className="h-2">
           {errors.service && (

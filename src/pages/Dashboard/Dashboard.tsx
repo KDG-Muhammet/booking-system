@@ -1,36 +1,46 @@
 import { useState } from "react";
 import Modal from "../../components/ui/Modal";
 import NewAppointmentForm from "../../components/ui/NewAppointmentForm";
+import type { Appointment } from "../../types/appointment";
+import { services } from "../../services/serviceData";
 
 function Dashboard() {
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  const appointments = [
+  const [appointments, setAppointments] = useState<Appointment[]>([
     {
+      id: 1,
       time: "09:00",
       customer: "Jan Janssens",
-      service: "Knipbeurt",
+      serviceId: 2,
+      date: "2026-10-03",
       status: "Bevestigd",
     },
     {
+      id: 2,
       time: "10:30",
       customer: "Sarah Peeters",
-      service: "Consultatie",
+      serviceId: 1,
+      date: "2026-10-03",
       status: "Bevestigd",
     },
     {
+      id: 3,
       time: "13:00",
       customer: "Mohamed Ali",
-      service: "Baard + Knipbeurt",
+      serviceId: 3,
+      date: "2026-10-03",
       status: "In afwachting",
     },
     {
+      id: 4,
       time: "15:30",
       customer: "Emma De Smet",
-      service: "Knipbeurt",
+      serviceId: 1,
+      date: "2026-10-03",
       status: "Bevestigd",
     },
-  ];
+  ]);
 
   return (
     <div className="space-y-8">
@@ -126,7 +136,7 @@ function Dashboard() {
                   </p>
 
                   <p className="mt-1 text-xs text-gray-500">
-                    {appointment.service}
+                    {services.find((s) => s.id === appointment.serviceId)?.name}
                   </p>
                 </div>
               </div>
@@ -173,7 +183,7 @@ function Dashboard() {
                   </p>
 
                   <p className="mt-1 text-xs text-gray-500">
-                    {appointment.service}
+                    {services.find((s) => s.id === appointment.serviceId)?.name}
                   </p>
                 </div>
 
@@ -206,7 +216,15 @@ function Dashboard() {
         onClose={() => setIsModalOpen(false)}
         title="Nieuwe afspraak"
       >
-        <NewAppointmentForm onClose={() => setIsModalOpen(false)} />
+        <NewAppointmentForm
+          onClose={() => setIsModalOpen(false)}
+          onAppointmentCreated={(appointment) => {
+            setAppointments((prevAppointments) => [
+              ...prevAppointments,
+              appointment,
+            ]);
+          }}
+        />
       </Modal>
     </div>
   );
