@@ -2,10 +2,11 @@ import { useState } from "react";
 import Modal from "../../components/ui/Modal";
 import NewAppointmentForm from "../../components/ui/NewAppointmentForm";
 import type { Appointment } from "../../types/appointment";
-import { services } from "../../services/serviceData";
+import { useServices } from "../../hooks/useServices";
 
 function Dashboard() {
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const { services } = useServices();
 
   const [appointments, setAppointments] = useState<Appointment[]>([
     {

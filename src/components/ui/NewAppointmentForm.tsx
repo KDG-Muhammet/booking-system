@@ -2,7 +2,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm, type SubmitHandler } from "react-hook-form";
 import { z } from "zod";
 import type { Appointment } from "../../types/appointment";
-import { services } from "../../services/serviceData";
+import { useServices } from "../../hooks/useServices";
 
 interface NewAppointmentFormProps {
   onClose: () => void;
@@ -64,6 +64,8 @@ function NewAppointmentForm({
     }
   };
 
+  const { services } = useServices();
+
   return (
     <form className="space-y-3" onSubmit={handleSubmit(onSubmit)}>
       {/* Customer */}
@@ -78,6 +80,7 @@ function NewAppointmentForm({
           placeholder="Naam van de klant"
           className="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
         />
+
         <div className="h-2">
           {errors.customerName && (
             <p className="text-sm text-red-500">
