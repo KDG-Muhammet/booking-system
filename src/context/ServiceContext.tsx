@@ -8,6 +8,7 @@ interface ServiceContextType {
   addService: (service: Service) => void;
   toggleServiceStatus: (id: number) => void;
   updateService: (updatedService: Service) => void;
+  deleteService: (id: number) => void;
 }
 
 export const ServiceContext = createContext<ServiceContextType | undefined>(
@@ -40,10 +41,21 @@ export function ServiceProvider({ children }: ServiceProviderProps) {
       ),
     );
   };
+  const deleteService = (id: number) => {
+    setServices((currentServices) =>
+      currentServices.filter((service) => service.id !== id),
+    );
+  };
 
   return (
     <ServiceContext.Provider
-      value={{ services, addService, toggleServiceStatus, updateService }}
+      value={{
+        services,
+        addService,
+        toggleServiceStatus,
+        updateService,
+        deleteService,
+      }}
     >
       {children}
     </ServiceContext.Provider>
