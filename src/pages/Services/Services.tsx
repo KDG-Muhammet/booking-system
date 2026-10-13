@@ -48,23 +48,23 @@ function Services() {
         <table className="w-full text-left table-fixed">
           <thead className="border-b border-gray-200 bg-gray-100">
             <tr>
-              <th className="px-6 py-4 text-sm font-semibold text-gray-600">
+              <th className="px-6 py-4 text-lg font-semibold text-gray-600">
                 Dienst
               </th>
 
-              <th className="px-6 py-4 text-sm font-semibold text-gray-600">
+              <th className="px-6 py-4 text-lg font-semibold text-gray-600">
                 Duur
               </th>
 
-              <th className="px-6 py-4 text-sm font-semibold text-gray-600">
+              <th className="px-6 py-4 text-lg font-semibold text-gray-600">
                 Prijs
               </th>
 
-              <th className="px-6 py-4 text-sm font-semibold text-gray-600">
+              <th className="px-6 py-4 text-lg font-semibold text-gray-600">
                 Status
               </th>
 
-              <th className="px-6 py-4 text-sm font-semibold text-gray-600">
+              <th className="px-6 py-4 text-lg font-semibold text-gray-600">
                 Actie
               </th>
             </tr>
@@ -73,21 +73,21 @@ function Services() {
           <tbody className="divide-y divide-gray-100">
             {services.map((service) => (
               <tr key={service.id}>
-                <td className="px-6 py-4 text-sm font-medium text-gray-900">
+                <td className="px-6 py-4 text-lg font-medium text-gray-900">
                   {service.name}
                 </td>
 
-                <td className="px-6 py-4 text-sm text-gray-600">
+                <td className="px-6 py-4 text-lg text-gray-600">
                   {service.duration} min
                 </td>
 
-                <td className="px-6 py-4 text-sm text-gray-600">
+                <td className="px-6 py-4 text-lg text-gray-600">
                   €{service.price}
                 </td>
 
                 <td className="px-6 py-4">
                   <span
-                    className={`rounded-full px-2.5 py-1 text-xs font-medium ${
+                    className={`rounded-full px-2.5 py-1 text-lg font-medium ${
                       service.active
                         ? "bg-green-50 text-green-700"
                         : "bg-gray-100 text-gray-600"
@@ -101,7 +101,7 @@ function Services() {
                     <button
                       type="button"
                       onClick={() => toggleServiceStatus(service.id)}
-                      className={`w-28 shrink-0 rounded-lg px-3 py-2 text-center text-xs font-semibold transition-colors ${
+                      className={`w-24 shrink-0 rounded-lg px-3 py-2 text-center text-sm font-semibold transition-colors ${
                         service.active
                           ? "bg-orange-50 text-orange-700 hover:bg-orange-100"
                           : "bg-green-50 text-green-700 hover:bg-green-100"
@@ -113,7 +113,7 @@ function Services() {
                     <button
                       type="button"
                       onClick={() => openEditServiceForm(service)}
-                      className="w-20 shrink-0 rounded-lg bg-blue-50 px-3 py-2 text-center text-xs font-semibold text-blue-700 transition-colors hover:bg-blue-100"
+                      className="w-24 shrink-0 rounded-lg bg-blue-50 px-3 py-2 text-center text-sm font-semibold text-blue-700 transition-colors hover:bg-blue-100"
                     >
                       Bewerken
                     </button>
@@ -121,7 +121,7 @@ function Services() {
                     <button
                       type="button"
                       onClick={() => setServiceToDelete(service)}
-                      className="w-24 shrink-0 rounded-lg bg-red-50 px-3 py-2 text-center text-xs font-semibold text-red-700 transition-colors hover:bg-red-100"
+                      className="w-24 shrink-0 rounded-lg bg-red-50 px-3 py-2 text-center text-sm font-semibold text-red-700 transition-colors hover:bg-red-100"
                     >
                       Verwijderen
                     </button>
