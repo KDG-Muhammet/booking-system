@@ -151,6 +151,7 @@ function Services() {
           serviceToEdit={serviceToEdit ?? undefined}
         />
       </Modal>
+
       <Modal
         isOpen={serviceToDelete !== null}
         onClose={() => setServiceToDelete(null)}

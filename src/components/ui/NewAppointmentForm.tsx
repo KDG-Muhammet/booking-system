@@ -3,10 +3,10 @@ import { useForm, type SubmitHandler } from "react-hook-form";
 import { z } from "zod";
 import type { Appointment } from "../../types/appointment";
 import { useServices } from "../../hooks/useServices";
+import { useAppointments } from "../../hooks/useAppointments";
 
 interface NewAppointmentFormProps {
   onClose: () => void;
-  onAppointmentCreated: (appointment: Appointment) => void;
 }
 
 const schema = z.object({
@@ -19,10 +19,10 @@ const schema = z.object({
 
 type FormFields = z.infer<typeof schema>;
 
-function NewAppointmentForm({
-  onClose,
-  onAppointmentCreated,
-}: NewAppointmentFormProps) {
+function NewAppointmentForm({ onClose }: NewAppointmentFormProps) {
+  const { services } = useServices();
+  const { addAppointment } = useAppointments();
+
   // destructure useForm hook to get the register and connect input fields to react hook form
   const {
     register,
@@ -53,7 +53,7 @@ function NewAppointmentForm({
         notes: data.notes,
         status: "Bevestigd",
       };
-      onAppointmentCreated(newAppointment);
+      addAppointment(newAppointment);
 
       console.log(data);
       onClose();
@@ -63,8 +63,6 @@ function NewAppointmentForm({
       });
     }
   };
-
-  const { services } = useServices();
 
   return (
     <form className="space-y-3" onSubmit={handleSubmit(onSubmit)}>

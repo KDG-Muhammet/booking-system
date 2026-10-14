@@ -9,25 +9,28 @@ import Settings from "./pages/Settings/Settings";
 
 import DashboardLayout from "./components/layout/DashboardLayout";
 import { ServiceProvider } from "./context/ServiceContext";
+import { AppointmentProvider } from "./context/AppointmentContext";
 
 function App() {
   return (
     <ServiceProvider>
-      <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Navigate to="/dashboard" />} />
+      <AppointmentProvider>
+        <BrowserRouter>
+          <Routes>
+            <Route path="/" element={<Navigate to="/dashboard" />} />
 
-          <Route path="/login" element={<Login />} />
+            <Route path="/login" element={<Login />} />
 
-          <Route element={<DashboardLayout />}>
-            <Route path="/dashboard" element={<Dashboard />} />
-            <Route path="/appointments" element={<Appointments />} />
-            <Route path="/customers" element={<Customers />} />
-            <Route path="/services" element={<Services />} />
-            <Route path="/settings" element={<Settings />} />
-          </Route>
-        </Routes>
-      </BrowserRouter>
+            <Route element={<DashboardLayout />}>
+              <Route path="/dashboard" element={<Dashboard />} />
+              <Route path="/appointments" element={<Appointments />} />
+              <Route path="/customers" element={<Customers />} />
+              <Route path="/services" element={<Services />} />
+              <Route path="/settings" element={<Settings />} />
+            </Route>
+          </Routes>
+        </BrowserRouter>
+      </AppointmentProvider>
     </ServiceProvider>
   );
 }
