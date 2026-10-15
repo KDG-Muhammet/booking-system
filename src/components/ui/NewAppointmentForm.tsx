@@ -7,6 +7,8 @@ import { useAppointments } from "../../hooks/useAppointments";
 
 interface NewAppointmentFormProps {
   onClose: () => void;
+  appointmentToEdit?: Appointment;
+  onAppointmentUpdated: (appointment: Appointment) => void;
 }
 
 const schema = z.object({
@@ -19,7 +21,11 @@ const schema = z.object({
 
 type FormFields = z.infer<typeof schema>;
 
-function NewAppointmentForm({ onClose }: NewAppointmentFormProps) {
+function NewAppointmentForm({
+  onClose,
+  appointmentToEdit,
+  onAppointmentUpdated,
+}: NewAppointmentFormProps) {
   const { services } = useServices();
   const { addAppointment } = useAppointments();
 
@@ -31,11 +37,11 @@ function NewAppointmentForm({ onClose }: NewAppointmentFormProps) {
     formState: { errors, isSubmitting },
   } = useForm<FormFields>({
     defaultValues: {
-      customerName: "",
-      service: "",
-      date: "",
-      time: "",
-      notes: "",
+      customerName: appointmentToEdit?.customer ?? "",
+      service: appointmentToEdit?.serviceId?.toString() ?? "",
+      date: appointmentToEdit?.date ?? "",
+      time: appointmentToEdit?.time ?? "",
+      notes: appointmentToEdit?.notes ?? "",
     },
     resolver: zodResolver(schema),
   });
@@ -44,16 +50,20 @@ function NewAppointmentForm({ onClose }: NewAppointmentFormProps) {
     try {
       await new Promise((resolve) => setTimeout(resolve, 1000));
 
-      const newAppointment: Appointment = {
-        id: Date.now(),
+      const appointment: Appointment = {
+        id: appointmentToEdit?.id ?? Date.now(),
         customer: data.customerName,
         serviceId: Number(data.service),
         date: data.date,
         time: data.time,
         notes: data.notes,
-        status: "Bevestigd",
+        status: appointmentToEdit?.status ?? "Bevestigd",
       };
-      addAppointment(newAppointment);
+      if (appointmentToEdit) {
+        onAppointmentUpdated(appointment);
+      } else {
+        addAppointment(appointment);
+      }
 
       console.log(data);
       onClose();
@@ -184,7 +194,11 @@ function NewAppointmentForm({ onClose }: NewAppointmentFormProps) {
           className="rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-blue-700"
           disabled={isSubmitting}
         >
-          {isSubmitting ? "Bezig met opslaan..." : "Afspraken maken"}
+          {isSubmitting
+            ? "Bezig met opslaan..."
+            : appointmentToEdit
+              ? "Wijzigingen opslaan"
+              : "Afspraken maken"}
         </button>
         {errors.root && (
           <p className="text-sm text-red-500">{errors.root.message}</p>
