@@ -6,7 +6,7 @@ import type { Appointment } from "../types/appointment";
       time: "09:00",
       customer: "Jan Janssens",
       serviceId: 2,
-      date: "2026-10-03",
+      date: "2026-10-16",
       status: "Bevestigd",
     },
     {

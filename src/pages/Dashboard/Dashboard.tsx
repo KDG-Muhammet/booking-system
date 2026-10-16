@@ -6,8 +6,20 @@ import { useAppointments } from "../../hooks/useAppointments";
 
 function Dashboard() {
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [viewMode, setViewMode] = useState<"list" | "grid">("grid");
   const { services } = useServices();
   const { appointments } = useAppointments();
+
+  const now = new Date();
+  const today = new Date().toISOString().split("T")[0];
+
+  const todayAppointments = appointments
+    .filter((appointment) => appointment.date === today)
+    .sort((a, b) => a.time.localeCompare(b.time));
+  const todayAppointmentCount = todayAppointments.length;
+
+  const activeServices = services.filter((service) => service.active);
+  const activeServiceCount = activeServices.length;
 
   return (
     <div className="space-y-8">
@@ -34,7 +46,9 @@ function Dashboard() {
         <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
           <p className="text-sm text-gray-500">Afspraken vandaag</p>
 
-          <p className="mt-2 text-3xl font-bold text-gray-900">8</p>
+          <p className="mt-2 text-3xl font-bold text-gray-900">
+            {todayAppointmentCount}
+          </p>
 
           <p className="mt-2 text-xs text-green-600">
             ↑ 12% tegenover vorige week
@@ -52,7 +66,9 @@ function Dashboard() {
         <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
           <p className="text-sm text-gray-500">Diensten</p>
 
-          <p className="mt-2 text-3xl font-bold text-gray-900">6</p>
+          <p className="mt-2 text-3xl font-bold text-gray-900">
+            {activeServiceCount}
+          </p>
 
           <p className="mt-2 text-xs text-gray-500">Actieve diensten</p>
         </div>
@@ -68,116 +84,197 @@ function Dashboard() {
         </div>
       </div>
 
-      {/* Appointments */}
-      <div className="rounded-xl border border-gray-200 bg-white shadow-sm">
-        <div className="flex items-center justify-between border-b border-gray-200 px-6 py-4">
-          <div>
-            <h2 className="font-semibold text-gray-900">Afspraken vandaag</h2>
-
-            <p className="mt-1 text-xs text-gray-500">
-              Maandag 27 september 2026
-            </p>
-          </div>
-
-          <button className="text-sm font-medium text-blue-600 hover:text-blue-700">
-            Alle afspraken →
-          </button>
-        </div>
-
-        <div className="divide-y divide-gray-100">
-          {appointments.map((appointment) => (
-            <div
-              key={`${appointment.time}-${appointment.customer}`}
-              className="flex items-center justify-between px-6 py-4 hover:bg-gray-50"
-            >
-              <div className="flex items-center gap-5">
-                <div className="w-16">
-                  <p className="font-semibold text-gray-900">
-                    {appointment.time}
-                  </p>
-                </div>
-
-                <div>
-                  <p className="text-sm font-medium text-gray-900">
-                    {appointment.customer}
-                  </p>
-
-                  <p className="mt-1 text-xs text-gray-500">
-                    {services.find((s) => s.id === appointment.serviceId)?.name}
-                  </p>
-                </div>
-              </div>
-
-              <span
-                className={`rounded-full px-3 py-1 text-xs font-medium ${
-                  appointment.status === "Bevestigd"
-                    ? "bg-green-50 text-green-700"
-                    : "bg-yellow-50 text-yellow-700"
-                }`}
-              >
-                {appointment.status}
-              </span>
-            </div>
-          ))}
-        </div>
-      </div>
-
       <div className="rounded-xl border border-gray-200 bg-white shadow-sm px-6 py-4">
         <div className="flex items-center justify-between px-6 pb-4">
           <div>
             <h2 className="font-semibold text-gray-900">Afspraken vandaag</h2>
 
             <p className="mt-1 text-xs text-gray-500">
-              Maandag 27 september 2026
+              {now.toLocaleDateString("nl-BE", {
+                weekday: "long",
+                day: "numeric",
+                month: "long",
+                year: "numeric",
+              })}
             </p>
           </div>
+          <div className="inline-flex items-center gap-1 rounded-lg bg-gray-100 p-1">
+            <button
+              onClick={() => setViewMode("list")}
+              className={`flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition ${
+                viewMode === "list"
+                  ? "bg-white text-blue-600 shadow-sm"
+                  : "text-gray-600 hover:text-gray-900"
+              }`}
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="18"
+                height="18"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01" />
+              </svg>
+              Lijst
+            </button>
 
+            <button
+              onClick={() => setViewMode("grid")}
+              className={`flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition ${
+                viewMode === "grid"
+                  ? "bg-white text-blue-600 shadow-sm"
+                  : "text-gray-600 hover:text-gray-900"
+              }`}
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="18"
+                height="18"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <rect x="3" y="3" width="7" height="7" rx="1" />
+                <rect x="14" y="3" width="7" height="7" rx="1" />
+                <rect x="3" y="14" width="7" height="7" rx="1" />
+                <rect x="14" y="14" width="7" height="7" rx="1" />
+              </svg>
+              Kaarten
+            </button>
+          </div>
           <button className="text-sm font-medium text-blue-600 hover:text-blue-700">
             Alle afspraken →
           </button>
         </div>
 
-        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
-          {appointments.map((appointment) => (
-            <div
-              key={`${appointment.time}-${appointment.customer}`}
-              className="items-center justify-between px-6 py-4 hover:bg-gray-100 border border-gray-200 rounded-lg"
-            >
-              <div className="flex items-center justify-between pb-4">
-                <div>
-                  <p className="text-sm font-medium text-gray-900">
-                    {appointment.customer}
-                  </p>
-
-                  <p className="mt-1 text-xs text-gray-500">
-                    {services.find((s) => s.id === appointment.serviceId)?.name}
-                  </p>
-                </div>
-
-                <span
-                  className={`rounded-full px-3 py-1 text-xs font-medium ${
-                    appointment.status === "Bevestigd"
-                      ? "bg-green-50 text-green-700"
-                      : "bg-yellow-50 text-yellow-700"
-                  }`}
-                >
-                  {appointment.status}
-                </span>
-              </div>
-
-              <div className="bg-gray-300 rounded-lg px-6 py-4 ">
-                <p className="font-semibold text-gray-900">
-                  {appointment.time}
+        {viewMode === "list" && (
+          <div className="rounded-xl border border-gray-200">
+            <div className="divide-y divide-gray-100">
+              {todayAppointments.length === 0 ? (
+                <p className="px-6 py-8 text-center text-sm text-gray-500">
+                  Er zijn vandaag geen afspraken gepland.
                 </p>
-              </div>
-              <button className="mt-4 w-full rounded-lg bg-blue-400 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700">
-                Details
-              </button>
-            </div>
-          ))}
-        </div>
-      </div>
+              ) : (
+                todayAppointments.map((appointment) => (
+                  <div
+                    key={`${appointment.time}-${appointment.customer}`}
+                    className="flex items-center justify-between px-6 py-4 hover:bg-gray-50"
+                  >
+                    <div className="flex items-center gap-5">
+                      <div className="w-16">
+                        <p className="font-semibold text-gray-900">
+                          {appointment.time}
+                        </p>
+                      </div>
 
+                      <div>
+                        <p className="text-sm font-medium text-gray-900">
+                          {appointment.customer}
+                        </p>
+
+                        <p className="mt-1 text-xs text-gray-500">
+                          {
+                            services.find((s) => s.id === appointment.serviceId)
+                              ?.name
+                          }
+                        </p>
+                      </div>
+                    </div>
+
+                    <span
+                      className={`rounded-full px-3 py-1 text-xs font-medium ${
+                        appointment.status === "Bevestigd"
+                          ? "bg-green-50 text-green-700"
+                          : "bg-yellow-50 text-yellow-700"
+                      }`}
+                    >
+                      {appointment.status}
+                    </span>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+        )}
+
+        {viewMode === "grid" && (
+          <div className="">
+            <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
+              {appointments.map((appointment) => (
+                <div
+                  key={`${appointment.time}-${appointment.customer}`}
+                  className="group rounded-xl border border-gray-200 bg-white p-5 shadow-sm transition duration-200 hover:border-blue-200 hover:shadow-md"
+                >
+                  {/* Klant, dienst en status */}
+                  <div className="flex items-start justify-between gap-3 pb-5">
+                    <div className="min-w-0">
+                      <p className="truncate text-base font-semibold text-gray-900">
+                        {appointment.customer}
+                      </p>
+
+                      <p className="mt-1 truncate text-sm text-gray-500">
+                        {
+                          services.find((s) => s.id === appointment.serviceId)
+                            ?.name
+                        }
+                      </p>
+                    </div>
+
+                    <span
+                      className={`shrink-0 rounded-full px-3 py-1 text-xs font-semibold ${
+                        appointment.status === "Bevestigd"
+                          ? "bg-emerald-50 text-emerald-700"
+                          : appointment.status === "Geannuleerd"
+                            ? "bg-red-50 text-red-700"
+                            : "bg-amber-50 text-amber-700"
+                      }`}
+                    >
+                      {appointment.status}
+                    </span>
+                  </div>
+
+                  {/* Uur en duur — dezelfde structuur */}
+                  <div className="grid grid-cols-2 divide-x divide-gray-200 rounded-lg bg-gray-50 px-4 py-4 text-center">
+                    <div className="">
+                      <p className="text-xs font-medium text-gray-400">Tijd</p>
+                      <p className="mt-1 text-sm font-semibold text-gray-800">
+                        {appointment.time}
+                      </p>
+                    </div>
+
+                    <div className="">
+                      <p className="text-xs font-medium text-gray-400">Duur</p>
+                      <p className="mt-1 text-sm font-semibold text-gray-800">
+                        {
+                          services.find((s) => s.id === appointment.serviceId)
+                            ?.duration
+                        }{" "}
+                        min
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Details-knop */}
+                  <button
+                    type="button"
+                    className="mt-4 w-full rounded-lg border border-gray-200 px-4 py-2.5 text-sm font-semibold text-gray-700 transition hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700"
+                  >
+                    Details <span aria-hidden="true">→</span>
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
       <Modal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
