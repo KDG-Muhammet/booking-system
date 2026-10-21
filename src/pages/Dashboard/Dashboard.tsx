@@ -3,12 +3,13 @@ import Modal from "../../components/ui/Modal";
 import NewAppointmentForm from "../../components/ui/NewAppointmentForm";
 import { useServices } from "../../hooks/useServices";
 import { useAppointments } from "../../hooks/useAppointments";
+import type { Appointment } from "../../types/appointment";
 
 function Dashboard() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [viewMode, setViewMode] = useState<"list" | "grid">("grid");
   const { services } = useServices();
-  const { appointments } = useAppointments();
+  const { appointments, updateAppointment } = useAppointments();
 
   const now = new Date();
   const today = new Date().toISOString().split("T")[0];
@@ -20,6 +21,11 @@ function Dashboard() {
 
   const activeServices = services.filter((service) => service.active);
   const activeServiceCount = activeServices.length;
+
+  const [selectedAppointment, setSelectedAppointment] =
+    useState<Appointment | null>(null);
+  const [appointmentToEdit, setAppointmentToEdit] =
+    useState<Appointment | null>(null);
 
   return (
     <div className="space-y-8">
@@ -269,6 +275,7 @@ function Dashboard() {
                   {/* Details-knop */}
                   <button
                     type="button"
+                    onClick={() => setSelectedAppointment(appointment)}
                     className="mt-4 w-full rounded-lg border border-violet-200 bg-white/80 px-4 py-2.5 text-sm font-semibold text-violet-700 transition hover:border-blue-300 hover:bg-blue-600 hover:text-white"
                   >
                     Details <span aria-hidden="true">→</span>
@@ -281,10 +288,124 @@ function Dashboard() {
       </div>
       <Modal
         isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        title="Nieuwe afspraak"
+        onClose={() => {
+          setIsModalOpen(false);
+          setAppointmentToEdit(null);
+        }}
+        title={appointmentToEdit ? "Afspraak bewerken" : "Nieuwe afspraak"}
       >
-        <NewAppointmentForm onClose={() => setIsModalOpen(false)} />
+        <NewAppointmentForm
+          onClose={() => {
+            setIsModalOpen(false);
+            setAppointmentToEdit(null);
+          }}
+          appointmentToEdit={appointmentToEdit ?? undefined}
+          onAppointmentUpdated={(updatedAppointment) => {
+            updateAppointment(updatedAppointment);
+            setSelectedAppointment(updatedAppointment);
+            setIsModalOpen(false);
+            setAppointmentToEdit(null);
+          }}
+        />
+      </Modal>
+
+      <Modal
+        isOpen={selectedAppointment !== null}
+        onClose={() => setSelectedAppointment(null)}
+        title="Afspraakdetails"
+      >
+        {selectedAppointment && (
+          <div className="space-y-5">
+            <div className="rounded-xl bg-gradient-to-r from-blue-50 to-violet-50 p-4">
+              <p className="text-sm text-gray-500">Klant</p>
+              <p className="mt-1 text-lg font-bold text-gray-900">
+                {selectedAppointment.customer}
+              </p>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="rounded-lg border border-gray-200 p-3">
+                <p className="text-sm text-gray-500">Dienst</p>
+                <p className="mt-1 font-semibold text-violet-700">
+                  {services.find((s) => s.id === selectedAppointment.serviceId)
+                    ?.name ?? "Onbekende dienst"}
+                </p>
+              </div>
+
+              <div className="rounded-lg border border-gray-200 p-3">
+                <p className="text-sm text-gray-500">Prijs</p>
+                <p className="mt-1 font-semibold text-gray-900">
+                  {services
+                    .find((s) => s.id === selectedAppointment.serviceId)
+                    ?.price.toLocaleString("nl-BE", {
+                      style: "currency",
+                      currency: "EUR",
+                    }) ?? "Onbekend"}
+                </p>
+              </div>
+
+              <div className="rounded-lg border border-gray-200 p-3">
+                <p className="text-sm text-gray-500">Datum</p>
+                <p className="mt-1 font-semibold text-gray-900">
+                  {new Date(
+                    `${selectedAppointment.date}T00:00:00`,
+                  ).toLocaleDateString("nl-BE", {
+                    day: "numeric",
+                    month: "long",
+                    year: "numeric",
+                  })}
+                </p>
+              </div>
+
+              <div className="rounded-lg border border-gray-200 p-3">
+                <p className="text-sm text-gray-500">Uur en duur</p>
+                <p className="mt-1 font-semibold text-gray-900">
+                  {selectedAppointment.time}
+                  {" · "}
+                  {services.find((s) => s.id === selectedAppointment.serviceId)
+                    ?.duration ?? "?"}{" "}
+                  min
+                </p>
+              </div>
+            </div>
+
+            <div>
+              <p className="mb-2 text-sm font-medium text-gray-500">Status</p>
+              <span className="inline-flex rounded-full bg-emerald-100 px-3 py-1.5 text-sm font-semibold text-emerald-800">
+                {selectedAppointment.status}
+              </span>
+            </div>
+
+            <div className="rounded-lg border border-gray-200 p-4">
+              <p className="text-sm font-medium text-gray-500">Notities</p>
+              <p className="mt-1 whitespace-pre-wrap text-sm text-gray-800">
+                {selectedAppointment.notes?.trim() ||
+                  "Geen notities toegevoegd."}
+              </p>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <button
+                type="button"
+                onClick={() => {
+                  setAppointmentToEdit(selectedAppointment);
+                  setSelectedAppointment(null);
+                  setIsModalOpen(true);
+                }}
+                className="w-full rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-blue-700"
+              >
+                Bewerken
+              </button>
+              <button
+                type="button"
+                onClick={() => setSelectedAppointment(null)}
+                className="w-full rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-blue-700"
+              >
+                Sluiten
+              </button>
+            </div>
+          </div>
+        )}
       </Modal>
     </div>
   );
