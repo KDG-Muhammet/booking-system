@@ -40,7 +40,10 @@ function Dashboard() {
         </div>
 
         <button
-          onClick={() => setIsModalOpen(true)}
+          onClick={() => {
+            setAppointmentToEdit(null);
+            setIsModalOpen(true);
+          }}
           className="rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700"
         >
           + Nieuwe afspraak
