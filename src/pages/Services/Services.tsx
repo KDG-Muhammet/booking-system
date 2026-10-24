@@ -133,6 +133,7 @@ function Services() {
         </table>
       </div>
 
+      {/* Create/Update Service Modal */}
       <Modal
         isOpen={isModalOpen}
         onClose={() => {
@@ -151,7 +152,7 @@ function Services() {
           serviceToEdit={serviceToEdit ?? undefined}
         />
       </Modal>
-      {/* Delete Service Modal war */}
+      {/* Delete Service Modal warning */}
       <Modal
         isOpen={serviceToDelete !== null}
         onClose={() => setServiceToDelete(null)}

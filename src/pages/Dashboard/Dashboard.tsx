@@ -289,6 +289,8 @@ function Dashboard() {
           </div>
         )}
       </div>
+
+      {/* Create/Update Appointment Modal */}
       <Modal
         isOpen={isModalOpen}
         onClose={() => {
@@ -312,6 +314,7 @@ function Dashboard() {
         />
       </Modal>
 
+      {/* details appointment Modal */}
       <Modal
         isOpen={selectedAppointment !== null}
         onClose={() => setSelectedAppointment(null)}

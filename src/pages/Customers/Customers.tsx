@@ -1,7 +1,11 @@
+import { useState } from "react";
 import { useCustomers } from "../../hooks/useCustomers";
+import Modal from "../../components/ui/Modal";
+import NewCustomerForm from "../../components/ui/NewCustomerForm";
 
 function Customers() {
   const { customers } = useCustomers();
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   return (
     <div className="space-y-8">
@@ -15,6 +19,14 @@ function Customers() {
         </div>
 
         <div className="flex items-center gap-3">
+          <button
+            type="button"
+            onClick={() => setIsModalOpen(true)}
+            className="rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700"
+          >
+            + Nieuwe klant
+          </button>
+
           <div className="rounded-xl border border-blue-100 bg-blue-50 px-4 py-3">
             <p className="text-sm text-blue-600">Totaal aantal klanten</p>
             <p className="mt-1 text-2xl font-bold text-blue-900">
@@ -118,6 +130,13 @@ function Customers() {
           </div>
         )}
       </div>
+      <Modal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        title="Nieuwe klant"
+      >
+        <NewCustomerForm onClose={() => setIsModalOpen(false)} />
+      </Modal>
     </div>
   );
 }
