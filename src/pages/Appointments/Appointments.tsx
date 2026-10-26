@@ -75,7 +75,7 @@ function Appointments() {
                     <button
                       type="button"
                       onClick={() => setAppointmentToEdit(appointment)}
-                      className="mr-2 rounded-lg bg-blue-50 px-3 py-2 text-xs font-semibold text-blue-700 transition-colors hover:bg-blue-100"
+                      className="mb-2 mr-2 rounded-lg bg-blue-50 px-3 py-2 text-xs font-semibold text-blue-700 transition-colors hover:bg-blue-100"
                     >
                       Bewerken
                     </button>

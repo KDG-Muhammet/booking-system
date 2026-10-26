@@ -5,9 +5,12 @@ import NewCustomerForm from "../../components/ui/NewCustomerForm";
 import type { Customer } from "../../types/customer";
 
 function Customers() {
-  const { customers } = useCustomers();
+  const { customers, deleteCustomer } = useCustomers();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [customerToEdit, setCustomerToEdit] = useState<Customer | null>(null);
+  const [customerToDelete, setCustomerToDelete] = useState<Customer | null>(
+    null,
+  );
 
   return (
     <div className="space-y-8">
@@ -79,8 +82,8 @@ function Customers() {
             </p>
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm">
+          <div className="overflow-hidden ">
+            <table className="w-full text-left text-sm table-fixed">
               <thead className="bg-gray-50 text-xs uppercase tracking-wide text-gray-500">
                 <tr>
                   <th className="px-6 py-4 font-semibold">Klant</th>
@@ -108,7 +111,7 @@ function Customers() {
                             .slice(0, 2)
                             .toUpperCase()}
                         </div>
-                        <span className="font-semibold text-gray-900">
+                        <span className=" font-semibold text-gray-900">
                           {customer.name}
                         </span>
                       </div>
@@ -130,16 +133,25 @@ function Customers() {
                         : "—"}
                     </td>
                     <td className="whitespace-nowrap px-6 py-4">
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setCustomerToEdit(customer);
-                          setIsModalOpen(true);
-                        }}
-                        className="rounded-lg px-3 py-2 text-sm font-medium text-blue-600 transition hover:bg-blue-50 hover:text-blue-700"
-                      >
-                        Bewerken
-                      </button>
+                      <div className="flex flex-wrap items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setCustomerToEdit(customer);
+                            setIsModalOpen(true);
+                          }}
+                          className=" rounded-lg bg-blue-50 px-3 py-2 text-center text-sm font-semibold text-blue-700 transition-colors hover:bg-blue-100"
+                        >
+                          Bewerken
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setCustomerToDelete(customer)}
+                          className="rounded-lg bg-red-50 px-3 py-2 text-center text-sm font-semibold text-red-700 transition-colors hover:bg-red-100"
+                        >
+                          Verwijderen
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -148,6 +160,7 @@ function Customers() {
           </div>
         )}
       </div>
+      {/* Create/Update Customer Modal */}
       <Modal
         isOpen={isModalOpen}
         onClose={() => {
@@ -163,6 +176,45 @@ function Customers() {
             setCustomerToEdit(null);
           }}
         />
+      </Modal>
+      {/* Delete Customer Modal warning */}
+      <Modal
+        isOpen={customerToDelete !== null}
+        onClose={() => setCustomerToDelete(null)}
+        title="Klant verwijderen"
+      >
+        <div className="space-y-5">
+          <p className="text-sm text-gray-600">
+            Weet je zeker dat je de klant{" "}
+            <span className="font-semibold text-gray-900">
+              {customerToDelete?.name}
+            </span>{" "}
+            wilt verwijderen? Deze actie kan niet ongedaan worden gemaakt.
+          </p>
+
+          <div className="flex justify-end gap-3">
+            <button
+              type="button"
+              onClick={() => setCustomerToDelete(null)}
+              className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium hover:bg-gray-50"
+            >
+              Annuleren
+            </button>
+
+            <button
+              type="button"
+              onClick={() => {
+                if (customerToDelete) {
+                  deleteCustomer(customerToDelete.id);
+                  setCustomerToDelete(null);
+                }
+              }}
+              className="rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700"
+            >
+              Verwijderen
+            </button>
+          </div>
+        </div>
       </Modal>
     </div>
   );
