@@ -6,6 +6,7 @@ import type { Customer } from "../../types/customer";
 
 interface NewCustomerFormProps {
   onClose: () => void;
+  customerToEdit?: Customer;
 }
 
 const schema = z.object({
@@ -17,8 +18,8 @@ const schema = z.object({
 
 type FormFields = z.infer<typeof schema>;
 
-function NewCustomerForm({ onClose }: NewCustomerFormProps) {
-  const { addCustomer } = useCustomers();
+function NewCustomerForm({ onClose, customerToEdit }: NewCustomerFormProps) {
+  const { addCustomer, updateCustomer } = useCustomers();
 
   const {
     register,
@@ -27,10 +28,10 @@ function NewCustomerForm({ onClose }: NewCustomerFormProps) {
     formState: { errors, isSubmitting },
   } = useForm<FormFields>({
     defaultValues: {
-      name: "",
-      email: "",
-      phone: "",
-      notes: "",
+      name: customerToEdit?.name ?? "",
+      email: customerToEdit?.email ?? "",
+      phone: customerToEdit?.phone ?? "",
+      notes: customerToEdit?.notes ?? "",
     },
     resolver: zodResolver(schema),
   });
@@ -40,14 +41,18 @@ function NewCustomerForm({ onClose }: NewCustomerFormProps) {
       await new Promise((resolve) => setTimeout(resolve, 1000));
 
       const customer: Customer = {
-        id: Date.now(),
+        id: customerToEdit?.id ?? Date.now(),
         name: data.name,
         email: data.email,
         phone: data.phone,
         notes: data.notes,
-        createdAt: new Date().toISOString(),
+        createdAt: customerToEdit?.createdAt ?? new Date().toISOString(),
       };
-      addCustomer(customer);
+      if (customerToEdit) {
+        updateCustomer(customer);
+      } else {
+        addCustomer(customer);
+      }
       onClose();
     } catch (error) {
       setError("root", {
@@ -140,7 +145,11 @@ function NewCustomerForm({ onClose }: NewCustomerFormProps) {
           className="rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-blue-700"
           disabled={isSubmitting}
         >
-          {isSubmitting ? "Bezig met opslaan..." : "Klant toevoegen"}
+          {isSubmitting
+            ? "Bezig met opslaan..."
+            : customerToEdit
+              ? "Klant bijwerken"
+              : "Klant toevoegen"}
         </button>
       </div>
     </form>

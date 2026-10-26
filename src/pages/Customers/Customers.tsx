@@ -2,10 +2,12 @@ import { useState } from "react";
 import { useCustomers } from "../../hooks/useCustomers";
 import Modal from "../../components/ui/Modal";
 import NewCustomerForm from "../../components/ui/NewCustomerForm";
+import type { Customer } from "../../types/customer";
 
 function Customers() {
   const { customers } = useCustomers();
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [customerToEdit, setCustomerToEdit] = useState<Customer | null>(null);
 
   return (
     <div className="space-y-8">
@@ -21,7 +23,10 @@ function Customers() {
         <div className="flex items-center gap-3">
           <button
             type="button"
-            onClick={() => setIsModalOpen(true)}
+            onClick={() => {
+              setIsModalOpen(true);
+              setCustomerToEdit(null);
+            }}
             className="rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700"
           >
             + Nieuwe klant
@@ -82,6 +87,7 @@ function Customers() {
                   <th className="px-6 py-4 font-semibold">E-mailadres</th>
                   <th className="px-6 py-4 font-semibold">Telefoon</th>
                   <th className="px-6 py-4 font-semibold">Toegevoegd op</th>
+                  <th className="px-6 py-4 font-semibold">Acties</th>
                 </tr>
               </thead>
 
@@ -123,6 +129,18 @@ function Customers() {
                           ).toLocaleDateString("nl-BE")
                         : "—"}
                     </td>
+                    <td className="whitespace-nowrap px-6 py-4">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setCustomerToEdit(customer);
+                          setIsModalOpen(true);
+                        }}
+                        className="rounded-lg px-3 py-2 text-sm font-medium text-blue-600 transition hover:bg-blue-50 hover:text-blue-700"
+                      >
+                        Bewerken
+                      </button>
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -132,10 +150,19 @@ function Customers() {
       </div>
       <Modal
         isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        title="Nieuwe klant"
+        onClose={() => {
+          setIsModalOpen(false);
+          setCustomerToEdit(null);
+        }}
+        title={customerToEdit ? "Klant bewerken" : "Nieuwe klant"}
       >
-        <NewCustomerForm onClose={() => setIsModalOpen(false)} />
+        <NewCustomerForm
+          customerToEdit={customerToEdit ?? undefined}
+          onClose={() => {
+            setIsModalOpen(false);
+            setCustomerToEdit(null);
+          }}
+        />
       </Modal>
     </div>
   );
