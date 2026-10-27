@@ -5,12 +5,23 @@ import NewCustomerForm from "../../components/ui/NewCustomerForm";
 import type { Customer } from "../../types/customer";
 
 function Customers() {
-  const { customers, deleteCustomer } = useCustomers();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [customerToEdit, setCustomerToEdit] = useState<Customer | null>(null);
   const [customerToDelete, setCustomerToDelete] = useState<Customer | null>(
     null,
   );
+
+  const { customers, deleteCustomer } = useCustomers();
+  const [searchTerm, setSearchTerm] = useState("");
+  const filteredCustomers = customers.filter((customer) => {
+    const search = searchTerm.toLowerCase().trim();
+
+    return (
+      customer.name.toLowerCase().includes(search) ||
+      customer.email.toLowerCase().includes(search) ||
+      customer.phone.toLowerCase().includes(search)
+    );
+  });
 
   return (
     <div className="space-y-8">
@@ -46,14 +57,40 @@ function Customers() {
 
       {/* Klantenlijst */}
       <div className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
-        <div className="border-b border-gray-200 px-6 py-5">
-          <h2 className="font-semibold text-gray-900">Alle klanten</h2>
-          <p className="mt-1 text-sm text-gray-500">
-            Een overzicht van alle geregistreerde klanten.
-          </p>
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between border-b border-gray-200">
+          <div className="px-6 py-5">
+            <h2 className="font-semibold text-gray-900">Alle klanten</h2>
+            <p className="mt-1 text-sm text-gray-500">
+              Een overzicht van alle geregistreerde klanten.
+            </p>
+          </div>
+          <div className=" px-6 py-4">
+            <div className="relative max-w-md">
+              <svg
+                className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                aria-hidden="true"
+              >
+                <circle cx="11" cy="11" r="7" />
+                <path d="m20 20-4-4" />
+              </svg>
+
+              <input
+                type="text"
+                value={searchTerm}
+                onChange={(event) => setSearchTerm(event.target.value)}
+                placeholder="Zoek op naam, e-mail of telefoon..."
+                aria-label="Zoek klanten"
+                className="w-full rounded-lg border border-gray-200 bg-white py-2.5 pl-10 pr-4 text-sm outline-none transition placeholder:text-gray-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+              />
+            </div>
+          </div>
         </div>
 
-        {customers.length === 0 ? (
+        {filteredCustomers.length === 0 ? (
           <div className="px-6 py-16 text-center">
             <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-blue-50 text-blue-600">
               <svg
@@ -74,11 +111,14 @@ function Customers() {
             </div>
 
             <h3 className="mt-4 font-semibold text-gray-900">
-              Nog geen klanten
+              {customers.length === 0
+                ? "Nog geen klanten"
+                : "Geen klanten gevonden"}
             </h3>
-            <p className="mx-auto mt-2 max-w-sm text-sm text-gray-500">
-              Je klanten verschijnen hier zodra je ze aan je klantenlijst
-              toevoegt.
+            <p className="mt-1 text-sm text-gray-500">
+              {customers.length === 0
+                ? "Je klanten verschijnen hier zodra je ze toevoegt."
+                : "Probeer een andere naam, e-mailadres of telefoonnummer."}
             </p>
           </div>
         ) : (
@@ -95,7 +135,7 @@ function Customers() {
               </thead>
 
               <tbody className="divide-y divide-gray-100">
-                {customers.map((customer) => (
+                {filteredCustomers.map((customer) => (
                   <tr
                     key={customer.id}
                     className="transition hover:bg-blue-50/40"
