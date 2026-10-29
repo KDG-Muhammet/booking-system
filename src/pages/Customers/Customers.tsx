@@ -3,6 +3,8 @@ import { useCustomers } from "../../hooks/useCustomers";
 import Modal from "../../components/ui/Modal";
 import NewCustomerForm from "../../components/ui/NewCustomerForm";
 import type { Customer } from "../../types/customer";
+import { useAppointments } from "../../hooks/useAppointments";
+import { useServices } from "../../hooks/useServices";
 
 function Customers() {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -10,7 +12,12 @@ function Customers() {
   const [customerToDelete, setCustomerToDelete] = useState<Customer | null>(
     null,
   );
+  const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(
+    null,
+  );
 
+  const { services } = useServices();
+  const { appointments } = useAppointments();
   const { customers, deleteCustomer } = useCustomers();
   const [searchTerm, setSearchTerm] = useState("");
   const filteredCustomers = customers.filter((customer) => {
@@ -130,6 +137,7 @@ function Customers() {
                   <th className="px-6 py-4 font-semibold">E-mailadres</th>
                   <th className="px-6 py-4 font-semibold">Telefoon</th>
                   <th className="px-6 py-4 font-semibold">Toegevoegd op</th>
+                  <th className="px-6 py-4 font-semibold">Afspraken</th>
                   <th className="px-6 py-4 font-semibold">Acties</th>
                 </tr>
               </thead>
@@ -151,9 +159,38 @@ function Customers() {
                             .slice(0, 2)
                             .toUpperCase()}
                         </div>
-                        <span className=" font-semibold text-gray-900">
-                          {customer.name}
-                        </span>
+                        <div className="flex items-center gap-2">
+                          <span className="font-semibold text-gray-900">
+                            {customer.name}
+                          </span>
+
+                          <button
+                            type="button"
+                            onClick={() => setSelectedCustomer(customer)}
+                            title="Klantgegevens bekijken"
+                            aria-label={`Details bekijken van ${customer.name}`}
+                            className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-blue-200 bg-blue-50 text-blue-600 transition hover:border-blue-400 hover:bg-blue-100 hover:text-blue-800 focus:outline-none focus:ring-2 focus:ring-blue-300"
+                          >
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth="2"
+                              className="h-4 w-4"
+                              aria-hidden="true"
+                            >
+                              <circle cx="12" cy="12" r="9" />
+                              <path strokeLinecap="round" d="M12 11v5" />
+                              <circle
+                                cx="12"
+                                cy="8"
+                                r=".5"
+                                fill="currentColor"
+                              />
+                            </svg>
+                          </button>
+                        </div>
                       </div>
                     </td>
 
@@ -171,6 +208,17 @@ function Customers() {
                             `${customer.createdAt.slice(0, 10)}T00:00:00`,
                           ).toLocaleDateString("nl-BE")
                         : "—"}
+                    </td>
+                    <td className="whitespace-nowrap px-6 py-4">
+                      <span className="inline-flex items-center rounded-full bg-blue-50 px-3 py-1 text-sm font-semibold text-blue-700">
+                        {
+                          appointments.filter(
+                            (appointment) =>
+                              appointment.customer.trim().toLowerCase() ===
+                              customer.name.trim().toLowerCase(),
+                          ).length
+                        }
+                      </span>
                     </td>
                     <td className="whitespace-nowrap px-6 py-4">
                       <div className="flex flex-wrap items-center gap-2">
@@ -256,6 +304,143 @@ function Customers() {
           </div>
         </div>
       </Modal>
+      {/* detail Customer Modal */}
+      {selectedCustomer && (
+        <Modal
+          isOpen={true}
+          onClose={() => setSelectedCustomer(null)}
+          title="Klantgegevens"
+        >
+          <div className="space-y-6">
+            {/* Klantgegevens */}
+            <div className="flex items-center gap-4">
+              <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-blue-100 to-violet-100 text-lg font-bold text-blue-700">
+                {selectedCustomer.name
+                  .trim()
+                  .split(/\s+/)
+                  .map((part) => part[0])
+                  .join("")
+                  .slice(0, 2)
+                  .toUpperCase()}
+              </div>
+
+              <div>
+                <h3 className="text-lg font-bold text-gray-900">
+                  {selectedCustomer.name}
+                </h3>
+                <p className="text-sm text-gray-500">
+                  Klant sinds{" "}
+                  {selectedCustomer.createdAt
+                    ? new Date(
+                        `${selectedCustomer.createdAt.slice(0, 10)}T00:00:00`,
+                      ).toLocaleDateString("nl-BE")
+                    : "onbekend"}
+                </p>
+              </div>
+            </div>
+
+            {/* Contactgegevens */}
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="rounded-xl border border-gray-100 bg-gray-50 p-4">
+                <p className="text-xs font-medium uppercase tracking-wide text-gray-500">
+                  E-mailadres
+                </p>
+                <p className="mt-2 break-words text-sm font-semibold text-gray-900">
+                  {selectedCustomer.email || "Niet ingevuld"}
+                </p>
+              </div>
+
+              <div className="rounded-xl border border-gray-100 bg-gray-50 p-4">
+                <p className="text-xs font-medium uppercase tracking-wide text-gray-500">
+                  Telefoonnummer
+                </p>
+                <p className="mt-2 text-sm font-semibold text-gray-900">
+                  {selectedCustomer.phone || "Niet ingevuld"}
+                </p>
+              </div>
+            </div>
+
+            {/* Notities */}
+            <div>
+              <h4 className="font-semibold text-gray-900">Notities</h4>
+              <p className="mt-2 whitespace-pre-wrap text-sm text-gray-600">
+                {selectedCustomer.notes?.trim() || "Geen notities toegevoegd."}
+              </p>
+            </div>
+
+            {/* Afspraken */}
+            <div>
+              <h4 className="font-semibold text-gray-900">
+                Afspraken van deze klant
+              </h4>
+
+              {appointments.filter(
+                (appointment) =>
+                  appointment.customer.trim().toLowerCase() ===
+                  selectedCustomer.name.trim().toLowerCase(),
+              ).length === 0 ? (
+                <p className="mt-2 text-sm text-gray-500">
+                  Deze klant heeft nog geen afspraken.
+                </p>
+              ) : (
+                <div className="mt-3 space-y-3">
+                  {appointments
+                    .filter(
+                      (appointment) =>
+                        appointment.customer.trim().toLowerCase() ===
+                        selectedCustomer.name.trim().toLowerCase(),
+                    )
+                    .sort((a, b) =>
+                      `${b.date}T${b.time}`.localeCompare(
+                        `${a.date}T${a.time}`,
+                      ),
+                    )
+                    .map((appointment) => {
+                      const service = services.find(
+                        (item) => item.id === appointment.serviceId,
+                      );
+
+                      return (
+                        <div
+                          key={appointment.id}
+                          className="rounded-xl border border-gray-200 p-4"
+                        >
+                          <div className="flex flex-col justify-between gap-2 sm:flex-row sm:items-center">
+                            <div>
+                              <p className="font-semibold text-gray-900">
+                                {service?.name ?? "Onbekende dienst"}
+                              </p>
+                              <p className="mt-1 text-sm text-gray-500">
+                                {new Date(
+                                  `${appointment.date}T00:00:00`,
+                                ).toLocaleDateString("nl-BE")}{" "}
+                                om {appointment.time}
+                              </p>
+                            </div>
+
+                            <span className="w-fit rounded-full bg-blue-50 px-3 py-1 text-xs font-semibold text-blue-700">
+                              {appointment.status}
+                            </span>
+                          </div>
+                        </div>
+                      );
+                    })}
+                </div>
+              )}
+            </div>
+
+            <div className="flex justify-end border-t border-gray-100 pt-4">
+              <button
+                type="button"
+                onClick={() => setSelectedCustomer(null)}
+                className="rounded-lg border border-gray-200 px-4 py-2 text-sm font-semibold text-gray-700 transition hover:bg-gray-50"
+              >
+                Sluiten
+              </button>
+            </div>
+          </div>
+        </Modal>
+      )}
     </div>
   );
 }
