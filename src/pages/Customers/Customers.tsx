@@ -20,6 +20,9 @@ function Customers() {
   const { appointments } = useAppointments();
   const { customers, deleteCustomer } = useCustomers();
   const [searchTerm, setSearchTerm] = useState("");
+  const [sortBy, setSortBy] = useState("name");
+  const [sortOrder, setSortOrder] = useState("asc");
+
   const filteredCustomers = customers
     .filter((customer) => {
       const search = searchTerm.toLowerCase().trim();
@@ -31,20 +34,37 @@ function Customers() {
       );
     })
     .sort((a, b) => {
-      let comparison = 0;
+      const valueA =
+        sortBy === "name"
+          ? a.name.toLowerCase()
+          : new Date(a.createdAt).getTime();
 
-      if (sortBy === "name") {
-        comparison = a.name.localeCompare(b.name, "nl");
-      } else {
-        comparison =
-          new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
-      }
+      const valueB =
+        sortBy === "name"
+          ? b.name.toLowerCase()
+          : new Date(b.createdAt).getTime();
 
-      return sortOrder === "asc" ? comparison : -comparison;
+      return sortOrder === "asc"
+        ? valueA > valueB
+          ? 1
+          : valueA < valueB
+            ? -1
+            : 0
+        : valueA < valueB
+          ? 1
+          : valueA > valueB
+            ? -1
+            : 0;
     });
 
-  const [sortBy, setSortBy] = useState<"name" | "createdAt">("name");
-  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
+  const handleSort = (column: "name" | "createdAt") => {
+    if (sortBy === column) {
+      setSortOrder(sortOrder === "asc" ? "desc" : "asc");
+    } else {
+      setSortBy(column);
+      setSortOrder("asc");
+    }
+  };
 
   return (
     <div className="space-y-8">
@@ -111,56 +131,6 @@ function Customers() {
               />
             </div>
           </div>
-          <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <div className="flex items-center gap-2">
-              <span className="text-sm font-medium text-gray-600">
-                Sorteren op:
-              </span>
-
-              <select
-                value={sortBy}
-                onChange={(event) =>
-                  setSortBy(event.target.value as "name" | "createdAt")
-                }
-                className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
-              >
-                <option value="name">Naam</option>
-                <option value="createdAt">Datum toegevoegd</option>
-              </select>
-            </div>
-            <button
-              type="button"
-              onClick={() =>
-                setSortOrder((current) => (current === "asc" ? "desc" : "asc"))
-              }
-              className="inline-flex items-center gap-2 self-start rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-50 sm:self-auto"
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                className="h-4 w-4"
-              >
-                {sortOrder === "asc" ? (
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M12 19V5m-7 7 7-7 7 7"
-                  />
-                ) : (
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M12 5v14m-7-7 7 7 7-7"
-                  />
-                )}
-              </svg>
-
-              {sortOrder === "asc" ? "Oplopend" : "Aflopend"}
-            </button>
-          </div>
         </div>
 
         {filteredCustomers.length === 0 ? (
@@ -199,10 +169,44 @@ function Customers() {
             <table className="w-full text-left text-sm table-fixed">
               <thead className="bg-gray-50 text-xs uppercase tracking-wide text-gray-500">
                 <tr>
-                  <th className="px-6 py-4 font-semibold">Klant</th>
+                  <th className="px-6 py-4 text-left font-semibold">
+                    <button
+                      type="button"
+                      onClick={() => handleSort("name")}
+                      className="inline-flex items-center gap-2 hover:text-blue-600"
+                    >
+                      Klant
+                      <span className="text-blue-600 text-base">
+                        {sortBy === "name"
+                          ? sortOrder === "asc"
+                            ? "↑"
+                            : "↓"
+                          : "↕"}
+                      </span>
+                    </button>
+                  </th>
+
                   <th className="px-6 py-4 font-semibold">E-mailadres</th>
+
                   <th className="px-6 py-4 font-semibold">Telefoon</th>
-                  <th className="px-6 py-4 font-semibold">Toegevoegd op</th>
+
+                  <th className="px-6 py-4 text-left font-semibold">
+                    <button
+                      type="button"
+                      onClick={() => handleSort("createdAt")}
+                      className="inline-flex items-center gap-2 hover:text-blue-600"
+                    >
+                      Toegevoegd op
+                      <span className="text-blue-600 text-base">
+                        {sortBy === "createdAt"
+                          ? sortOrder === "asc"
+                            ? "↑"
+                            : "↓"
+                          : "↕"}
+                      </span>
+                    </button>
+                  </th>
+
                   <th className="px-6 py-4 font-semibold">Afspraken</th>
                   <th className="px-6 py-4 font-semibold">Acties</th>
                 </tr>
