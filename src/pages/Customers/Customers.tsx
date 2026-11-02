@@ -5,6 +5,7 @@ import NewCustomerForm from "../../components/ui/NewCustomerForm";
 import type { Customer } from "../../types/customer";
 import { useAppointments } from "../../hooks/useAppointments";
 import { useServices } from "../../hooks/useServices";
+import ConfirmDeleteModal from "../../components/ui/ConfirmDeleteModal";
 
 function Customers() {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -336,44 +337,18 @@ function Customers() {
         />
       </Modal>
       {/* Delete Customer Modal warning */}
-      <Modal
+      <ConfirmDeleteModal
         isOpen={customerToDelete !== null}
         onClose={() => setCustomerToDelete(null)}
-        title="Klant verwijderen"
-      >
-        <div className="space-y-5">
-          <p className="text-sm text-gray-600">
-            Weet je zeker dat je de klant{" "}
-            <span className="font-semibold text-gray-900">
-              {customerToDelete?.name}
-            </span>{" "}
-            wilt verwijderen? Deze actie kan niet ongedaan worden gemaakt.
-          </p>
-
-          <div className="flex justify-end gap-3">
-            <button
-              type="button"
-              onClick={() => setCustomerToDelete(null)}
-              className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium hover:bg-gray-50"
-            >
-              Annuleren
-            </button>
-
-            <button
-              type="button"
-              onClick={() => {
-                if (customerToDelete) {
-                  deleteCustomer(customerToDelete.id);
-                  setCustomerToDelete(null);
-                }
-              }}
-              className="rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700"
-            >
-              Verwijderen
-            </button>
-          </div>
-        </div>
-      </Modal>
+        onConfirm={() => {
+          if (customerToDelete) {
+            deleteCustomer(customerToDelete.id);
+            setCustomerToDelete(null);
+          }
+        }}
+        itemName={customerToDelete?.name ?? "onbekend"}
+        itemType="Klant"
+      />
       {/* detail Customer Modal */}
       {selectedCustomer && (
         <Modal

@@ -3,6 +3,7 @@ import Modal from "../../components/ui/Modal";
 import NewServiceForm from "../../components/ui/NewServiceForm";
 import { useServices } from "../../hooks/useServices";
 import type { Service } from "../../types/service";
+import ConfirmDeleteModal from "../../components/ui/ConfirmDeleteModal";
 
 function Services() {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -153,44 +154,19 @@ function Services() {
         />
       </Modal>
       {/* Delete Service Modal warning */}
-      <Modal
+
+      <ConfirmDeleteModal
         isOpen={serviceToDelete !== null}
         onClose={() => setServiceToDelete(null)}
-        title="Dienst verwijderen"
-      >
-        <div className="space-y-5">
-          <p className="text-sm text-gray-600">
-            Weet je zeker dat je de dienst{" "}
-            <span className="font-semibold text-gray-900">
-              {serviceToDelete?.name}
-            </span>{" "}
-            wilt verwijderen? Deze actie kan niet ongedaan worden gemaakt.
-          </p>
-
-          <div className="flex justify-end gap-3">
-            <button
-              type="button"
-              onClick={() => setServiceToDelete(null)}
-              className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium hover:bg-gray-50"
-            >
-              Annuleren
-            </button>
-
-            <button
-              type="button"
-              onClick={() => {
-                if (serviceToDelete) {
-                  deleteService(serviceToDelete.id);
-                  setServiceToDelete(null);
-                }
-              }}
-              className="rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700"
-            >
-              Verwijderen
-            </button>
-          </div>
-        </div>
-      </Modal>
+        onConfirm={() => {
+          if (serviceToDelete) {
+            deleteService(serviceToDelete.id);
+            setServiceToDelete(null);
+          }
+        }}
+        itemName={serviceToDelete?.name ?? "onbekend"}
+        itemType="Dienst"
+      />
     </div>
   );
 }

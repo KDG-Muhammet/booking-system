@@ -4,6 +4,7 @@ import { useServices } from "../../hooks/useServices";
 import type { Appointment } from "../../types/appointment";
 import Modal from "../../components/ui/Modal";
 import NewAppointmentForm from "../../components/ui/NewAppointmentForm";
+import ConfirmDeleteModal from "../../components/ui/ConfirmDeleteModal";
 
 function Appointments() {
   const { appointments, deleteAppointment, updateAppointment } =
@@ -107,44 +108,18 @@ function Appointments() {
         )}
       </Modal>
       {/* Delete Appointment Modal warning */}
-      <Modal
+      <ConfirmDeleteModal
         isOpen={appointmentToDelete !== null}
         onClose={() => setAppointmentToDelete(null)}
-        title="Afspraak verwijderen"
-      >
-        <div className="space-y-5">
-          <p className="text-sm text-gray-600">
-            Weet je zeker dat je de afspraak{" "}
-            <span className="font-semibold text-gray-900">
-              {appointmentToDelete?.customer}
-            </span>{" "}
-            wilt verwijderen? Deze actie kan niet ongedaan worden gemaakt.
-          </p>
-
-          <div className="flex justify-end gap-3">
-            <button
-              type="button"
-              onClick={() => setAppointmentToDelete(null)}
-              className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium hover:bg-gray-50"
-            >
-              Annuleren
-            </button>
-
-            <button
-              type="button"
-              onClick={() => {
-                if (appointmentToDelete) {
-                  deleteAppointment(appointmentToDelete.id);
-                  setAppointmentToDelete(null);
-                }
-              }}
-              className="rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700"
-            >
-              Verwijderen
-            </button>
-          </div>
-        </div>
-      </Modal>
+        onConfirm={() => {
+          if (appointmentToDelete) {
+            deleteAppointment(appointmentToDelete.id);
+            setAppointmentToDelete(null);
+          }
+        }}
+        itemName={appointmentToDelete?.customer ?? "onbekend"}
+        itemType="Afspraak"
+      />
     </div>
   );
 }
