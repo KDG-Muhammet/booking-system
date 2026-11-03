@@ -7,6 +7,7 @@ import type { Customer } from "../../types/customer";
 interface NewCustomerFormProps {
   onClose: () => void;
   customerToEdit?: Customer;
+  onCustomerAdded?: (customer: Customer) => void;
 }
 
 const schema = z.object({
@@ -18,7 +19,11 @@ const schema = z.object({
 
 type FormFields = z.infer<typeof schema>;
 
-function NewCustomerForm({ onClose, customerToEdit }: NewCustomerFormProps) {
+function NewCustomerForm({
+  onClose,
+  customerToEdit,
+  onCustomerAdded,
+}: NewCustomerFormProps) {
   const { addCustomer, updateCustomer } = useCustomers();
 
   const {
@@ -52,6 +57,7 @@ function NewCustomerForm({ onClose, customerToEdit }: NewCustomerFormProps) {
         updateCustomer(customer);
       } else {
         addCustomer(customer);
+        onCustomerAdded?.(customer);
       }
       onClose();
     } catch (error) {
