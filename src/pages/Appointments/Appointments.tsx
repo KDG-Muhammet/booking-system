@@ -5,6 +5,7 @@ import type { Appointment } from "../../types/appointment";
 import Modal from "../../components/ui/Modal";
 import NewAppointmentForm from "../../components/ui/NewAppointmentForm";
 import ConfirmDeleteModal from "../../components/ui/ConfirmDeleteModal";
+import { useCustomers } from "../../hooks/useCustomers";
 
 function Appointments() {
   const { appointments, deleteAppointment, updateAppointment } =
@@ -14,6 +15,7 @@ function Appointments() {
   const [appointmentToDelete, setAppointmentToDelete] =
     useState<Appointment | null>(null);
   const { services } = useServices();
+  const { customers } = useCustomers();
 
   return (
     <div className="space-y-6">
@@ -50,7 +52,9 @@ function Appointments() {
               appointments.map((appointment) => (
                 <tr key={appointment.id} className="hover:bg-gray-50">
                   <td className="px-6 py-4 font-medium text-gray-900">
-                    {appointment.customer}
+                    {customers.find(
+                      (customer) => customer.id === appointment.customerId,
+                    )?.name ?? "Onbekende klant"}
                   </td>
                   <td className="px-6 py-4 text-gray-600">
                     {services.find((s) => s.id === appointment.serviceId)?.name}
@@ -117,7 +121,11 @@ function Appointments() {
             setAppointmentToDelete(null);
           }
         }}
-        itemName={appointmentToDelete?.customer ?? "onbekend"}
+        itemName={
+          customers.find(
+            (customer) => customer.id === appointmentToDelete?.customerId,
+          )?.name ?? "onbekend"
+        }
         itemType="Afspraak"
       />
     </div>

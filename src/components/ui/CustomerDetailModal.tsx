@@ -17,11 +17,7 @@ function CustomerDetailModal({
   onClose,
 }: CustomerDetailModalProps) {
   const customerAppointments = appointments
-    .filter(
-      (appointment) =>
-        appointment.customer.trim().toLowerCase() ===
-        customer.name.trim().toLowerCase(),
-    )
+    .filter((appointment) => appointment.customerId === customer.id)
     .sort((a, b) => `${b.date}T${b.time}`.localeCompare(`${a.date}T${a.time}`));
 
   const initials = customer.name

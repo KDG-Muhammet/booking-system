@@ -286,8 +286,7 @@ function Customers() {
                         {
                           appointments.filter(
                             (appointment) =>
-                              appointment.customer.trim().toLowerCase() ===
-                              customer.name.trim().toLowerCase(),
+                              appointment.customerId === customer.id,
                           ).length
                         }
                       </span>

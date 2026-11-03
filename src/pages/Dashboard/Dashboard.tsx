@@ -4,12 +4,14 @@ import NewAppointmentForm from "../../components/ui/NewAppointmentForm";
 import { useServices } from "../../hooks/useServices";
 import { useAppointments } from "../../hooks/useAppointments";
 import type { Appointment } from "../../types/appointment";
+import { useCustomers } from "../../hooks/useCustomers";
 
 function Dashboard() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [viewMode, setViewMode] = useState<"list" | "grid">("grid");
   const { services } = useServices();
   const { appointments, updateAppointment } = useAppointments();
+  const { customers } = useCustomers();
 
   const now = new Date();
   const today = new Date().toISOString().split("T")[0];
@@ -174,7 +176,7 @@ function Dashboard() {
               ) : (
                 todayAppointments.map((appointment) => (
                   <div
-                    key={`${appointment.time}-${appointment.customer}`}
+                    key={`${appointment.time}-${appointment.customerId}`}
                     className="flex items-center justify-between px-6 py-4 hover:bg-gray-50"
                   >
                     <div className="flex items-center gap-5">
@@ -186,7 +188,10 @@ function Dashboard() {
 
                       <div>
                         <p className="text-sm font-medium text-gray-900">
-                          {appointment.customer}
+                          {customers.find(
+                            (customer) =>
+                              customer.id === appointment.customerId,
+                          )?.name ?? "Onbekende klant"}
                         </p>
 
                         <p className="mt-1 text-xs text-gray-500">
@@ -219,14 +224,16 @@ function Dashboard() {
             <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
               {appointments.map((appointment) => (
                 <div
-                  key={`${appointment.time}-${appointment.customer}`}
+                  key={`${appointment.time}-${appointment.customerId}`}
                   className="group rounded-xl border border-blue-200 bg-gradient-to-br from-white via-blue-50/70 to-violet-50/80 p-5 shadow-sm transition duration-200 hover:-translate-y-0.5 hover:border-violet-300 hover:shadow-lg hover:shadow-blue-100/70"
                 >
                   {/* Klant, dienst en status */}
                   <div className="flex items-start justify-between gap-3 pb-5">
                     <div className="min-w-0">
                       <p className="truncate text-base font-bold text-slate-800">
-                        {appointment.customer}
+                        {customers.find(
+                          (customer) => customer.id === appointment.customerId,
+                        )?.name ?? "Onbekende klant"}
                       </p>
 
                       <p className="mt-1 truncate text-sm font-medium text-violet-700">
@@ -325,7 +332,9 @@ function Dashboard() {
             <div className="rounded-xl bg-gradient-to-r from-blue-50 to-violet-50 p-4">
               <p className="text-sm text-gray-500">Klant</p>
               <p className="mt-1 text-lg font-bold text-gray-900">
-                {selectedAppointment.customer}
+                {customers.find(
+                  (customer) => customer.id === selectedAppointment.customerId,
+                )?.name ?? "Onbekende klant"}
               </p>
             </div>
 
