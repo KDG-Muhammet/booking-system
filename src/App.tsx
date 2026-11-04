@@ -11,30 +11,33 @@ import DashboardLayout from "./components/layout/DashboardLayout";
 import { ServiceProvider } from "./context/ServiceContext";
 import { AppointmentProvider } from "./context/AppointmentContext";
 import { CustomerProvider } from "./context/CustomerContext";
+import { SettingsProvider } from "./context/SettingsContext";
 
 function App() {
   return (
-    <CustomerProvider>
-      <ServiceProvider>
-        <AppointmentProvider>
-          <BrowserRouter>
-            <Routes>
-              <Route path="/" element={<Navigate to="/dashboard" />} />
+    <SettingsProvider>
+      <CustomerProvider>
+        <ServiceProvider>
+          <AppointmentProvider>
+            <BrowserRouter>
+              <Routes>
+                <Route path="/" element={<Navigate to="/dashboard" />} />
 
-              <Route path="/login" element={<Login />} />
+                <Route path="/login" element={<Login />} />
 
-              <Route element={<DashboardLayout />}>
-                <Route path="/dashboard" element={<Dashboard />} />
-                <Route path="/appointments" element={<Appointments />} />
-                <Route path="/customers" element={<Customers />} />
-                <Route path="/services" element={<Services />} />
-                <Route path="/settings" element={<Settings />} />
-              </Route>
-            </Routes>
-          </BrowserRouter>
-        </AppointmentProvider>
-      </ServiceProvider>
-    </CustomerProvider>
+                <Route element={<DashboardLayout />}>
+                  <Route path="/dashboard" element={<Dashboard />} />
+                  <Route path="/appointments" element={<Appointments />} />
+                  <Route path="/customers" element={<Customers />} />
+                  <Route path="/services" element={<Services />} />
+                  <Route path="/settings" element={<Settings />} />
+                </Route>
+              </Routes>
+            </BrowserRouter>
+          </AppointmentProvider>
+        </ServiceProvider>
+      </CustomerProvider>
+    </SettingsProvider>
   );
 }
 
