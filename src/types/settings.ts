@@ -16,3 +16,11 @@ export interface OpeningDay {
 export interface OpeningHoursSettings {
   days: OpeningDay[];
 }
+
+export interface NotificationSettings {
+  newAppointment: boolean;
+  updatedAppointment: boolean;
+  cancelledAppointment: boolean;
+  appointmentReminder: boolean;
+  emailNotifications: boolean;
+}

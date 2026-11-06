@@ -1,12 +1,18 @@
 import { createContext, useState } from "react";
 import type { ReactNode } from "react";
-import type { BusinessSettings, OpeningHoursSettings } from "../types/settings";
+import type {
+  BusinessSettings,
+  NotificationSettings,
+  OpeningHoursSettings,
+} from "../types/settings";
 
 interface SettingsContextType {
   businessSettings: BusinessSettings;
   updateBusinessSettings: (settings: BusinessSettings) => void;
   openingHours: OpeningHoursSettings;
   updateOpeningHours: (settings: OpeningHoursSettings) => void;
+  notifications: NotificationSettings;
+  updateNotifications: (settings: NotificationSettings) => void;
 }
 
 export const SettingsContext = createContext<SettingsContextType | undefined>(
@@ -23,6 +29,14 @@ const defaultOpeningHours: OpeningHoursSettings = {
     { day: "Zaterdag", enabled: true, openTime: "09:00", closeTime: "18:00" },
     { day: "Zondag", enabled: false, openTime: "09:00", closeTime: "18:00" },
   ],
+};
+
+const defaultNotifications: NotificationSettings = {
+  newAppointment: true,
+  updatedAppointment: true,
+  cancelledAppointment: true,
+  appointmentReminder: true,
+  emailNotifications: true,
 };
 
 interface SettingsProviderProps {
@@ -53,6 +67,12 @@ export function SettingsProvider({ children }: SettingsProviderProps) {
     setOpeningHours(settings);
   };
 
+  const [notifications, setNotifications] =
+    useState<NotificationSettings>(defaultNotifications);
+
+  const updateNotifications = (settings: NotificationSettings) => {
+    setNotifications(settings);
+  };
   return (
     <SettingsContext.Provider
       value={{
@@ -60,6 +80,8 @@ export function SettingsProvider({ children }: SettingsProviderProps) {
         updateBusinessSettings,
         openingHours,
         updateOpeningHours,
+        notifications,
+        updateNotifications,
       }}
     >
       {children}
