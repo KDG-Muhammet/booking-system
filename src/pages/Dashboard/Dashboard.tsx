@@ -5,6 +5,7 @@ import { useServices } from "../../hooks/useServices";
 import { useAppointments } from "../../hooks/useAppointments";
 import type { Appointment } from "../../types/appointment";
 import { useCustomers } from "../../hooks/useCustomers";
+import AppointmentCalendar from "../../components/ui/AppointmentCalendar";
 
 function Dashboard() {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -41,6 +42,8 @@ function Dashboard() {
           </p>
         </div>
 
+        <div></div>
+
         <button
           onClick={() => {
             setAppointmentToEdit(null);
@@ -51,7 +54,7 @@ function Dashboard() {
           + Nieuwe afspraak
         </button>
       </div>
-
+      <AppointmentCalendar />
       {/* Statistics */}
       <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
         <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
