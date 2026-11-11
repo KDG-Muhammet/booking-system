@@ -6,7 +6,7 @@ import type { Appointment } from "../types/appointment";
       time: "09:00",
       customer: "Jan Janssens",
       serviceId: 2,
-      date: "2026-10-16",
+      date: "2026-11-10",
       status: "Bevestigd",
     },
     {
@@ -14,7 +14,7 @@ import type { Appointment } from "../types/appointment";
       time: "10:30",
       customer: "Sarah Peeters",
       serviceId: 1,
-      date: "2026-10-03",
+      date: "2026-11-10",
       status: "Bevestigd",
     },
     {
@@ -22,7 +22,7 @@ import type { Appointment } from "../types/appointment";
       time: "13:00",
       customer: "Mohamed Ali",
       serviceId: 3,
-      date: "2026-10-03",
+      date: "2026-11-10",
       status: "In afwachting",
     },
     {
@@ -30,7 +30,7 @@ import type { Appointment } from "../types/appointment";
       time: "15:30",
       customer: "Emma De Smet",
       serviceId: 1,
-      date: "2026-10-03",
+      date: "2026-11-10",
       status: "Bevestigd",
     },
   ];

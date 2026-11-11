@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useAppointments } from "../../hooks/useAppointments";
 import { useServices } from "../../hooks/useServices";
 import { useCustomers } from "../../hooks/useCustomers";
+import { CalendarDays } from "lucide-react";
 
 function AppointmentCalendar() {
   const [currentDate, setCurrentDate] = useState(new Date());
@@ -58,9 +59,15 @@ function AppointmentCalendar() {
     <div className="rounded-xl border border-gray-200 bg-gray-50 p-4 shadow-sm">
       {/* Header */}
       <div className="mb-2 flex items-center justify-between">
-        <h2 className="text-lg font-semibold text-gray-900">
-          Afsprakenkalender
-        </h2>
+        <div className="flex items-center gap-3">
+          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-100 text-blue-600">
+            <CalendarDays size={22} />
+          </div>
+
+          <h2 className="text-lg font-semibold text-gray-900">
+            Afsprakenkalender
+          </h2>
+        </div>
 
         <div className="flex items-center gap-2">
           <button
@@ -197,8 +204,8 @@ function AppointmentCalendar() {
         ))}
       </div>
       {/* Selected day appointments */}
-      <div className="pt-5">
-        <h3 className="mb-4 text-sm font-semibold text-gray-900">
+      <div className="pt-3">
+        <h3 className="mb-3 text-sm font-semibold text-gray-900">
           {selectedDate
             ? selectedDate.toLocaleDateString("nl-BE", {
                 weekday: "long",
