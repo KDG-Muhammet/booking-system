@@ -3,7 +3,7 @@ import Modal from "../../components/ui/Modal";
 import NewAppointmentForm from "../../components/ui/NewAppointmentForm";
 import { useServices } from "../../hooks/useServices";
 import { useAppointments } from "../../hooks/useAppointments";
-import type { Appointment } from "../../types/appointment";
+import { AppointmentStatus, type Appointment } from "../../types/appointment";
 import { useCustomers } from "../../hooks/useCustomers";
 import AppointmentCalendar from "../../components/ui/AppointmentCalendar";
 import { List, LayoutGrid } from "lucide-react";
@@ -188,10 +188,17 @@ function Dashboard() {
                     </div>
 
                     <span
-                      className={`rounded-full px-3 py-1 text-xs font-medium ${
-                        appointment.status === "Bevestigd"
-                          ? "bg-green-50 text-green-700"
-                          : "bg-yellow-50 text-yellow-700"
+                      className={`rounded-full border px-3 py-1 text-xs font-medium ${
+                        appointment.status === AppointmentStatus.Pending
+                          ? "bg-yellow-50 text-yellow-700"
+                          : appointment.status === AppointmentStatus.Confirmed
+                            ? "bg-blue-50 text-blue-700"
+                            : appointment.status === AppointmentStatus.Completed
+                              ? "bg-green-50 text-green-700"
+                              : appointment.status ===
+                                  AppointmentStatus.Cancelled
+                                ? "bg-red-50 text-red-700"
+                                : "bg-gray-100 text-gray-700"
                       }`}
                     >
                       {appointment.status}
@@ -230,11 +237,16 @@ function Dashboard() {
 
                     <span
                       className={`shrink-0 rounded-full border px-3 py-1 text-xs font-semibold ${
-                        appointment.status === "Bevestigd"
-                          ? "border-emerald-200 bg-emerald-100 text-emerald-800"
-                          : appointment.status === "Geannuleerd"
-                            ? "border-rose-200 bg-rose-100 text-rose-800"
-                            : "border-amber-200 bg-amber-100 text-amber-800"
+                        appointment.status === AppointmentStatus.Pending
+                          ? "bg-amber-100 text-amber-800"
+                          : appointment.status === AppointmentStatus.Confirmed
+                            ? "bg-blue-100 text-blue-800"
+                            : appointment.status === AppointmentStatus.Completed
+                              ? "bg-emerald-100 text-emerald-800"
+                              : appointment.status ===
+                                  AppointmentStatus.Cancelled
+                                ? "bg-rose-100 text-rose-800"
+                                : "bg-gray-100 text-gray-700"
                       }`}
                     >
                       {appointment.status}
@@ -370,7 +382,22 @@ function Dashboard() {
 
             <div>
               <p className="mb-2 text-sm font-medium text-gray-500">Status</p>
-              <span className="inline-flex rounded-full bg-emerald-100 px-3 py-1.5 text-sm font-semibold text-emerald-800">
+
+              <span
+                className={`inline-flex rounded-full border px-3 py-1.5 text-sm font-semibold ${
+                  selectedAppointment.status === AppointmentStatus.Pending
+                    ? "border-amber-200 bg-amber-100 text-amber-800"
+                    : selectedAppointment.status === AppointmentStatus.Confirmed
+                      ? "border-blue-200 bg-blue-100 text-blue-800"
+                      : selectedAppointment.status ===
+                          AppointmentStatus.Completed
+                        ? "border-emerald-200 bg-emerald-100 text-emerald-800"
+                        : selectedAppointment.status ===
+                            AppointmentStatus.Cancelled
+                          ? "border-rose-200 bg-rose-100 text-rose-800"
+                          : "border-gray-200 bg-gray-100 text-gray-700"
+                }`}
+              >
                 {selectedAppointment.status}
               </span>
             </div>

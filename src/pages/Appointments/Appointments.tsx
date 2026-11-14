@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useAppointments } from "../../hooks/useAppointments";
 import { useServices } from "../../hooks/useServices";
-import type { Appointment } from "../../types/appointment";
+import { AppointmentStatus, type Appointment } from "../../types/appointment";
 import Modal from "../../components/ui/Modal";
 import NewAppointmentForm from "../../components/ui/NewAppointmentForm";
 import ConfirmDeleteModal from "../../components/ui/ConfirmDeleteModal";
@@ -67,10 +67,17 @@ function Appointments() {
                   </td>
                   <td className="px-6 py-4">
                     <span
-                      className={`rounded-full px-3 py-1 text-xs font-medium ${
-                        appointment.status === "Bevestigd"
-                          ? "bg-green-50 text-green-700"
-                          : "bg-yellow-50 text-yellow-700"
+                      className={`rounded-full border px-3 py-1 text-xs font-semibold ${
+                        appointment.status === AppointmentStatus.Pending
+                          ? "border-amber-200 bg-amber-100 text-amber-800"
+                          : appointment.status === AppointmentStatus.Confirmed
+                            ? "border-blue-200 bg-blue-100 text-blue-800"
+                            : appointment.status === AppointmentStatus.Completed
+                              ? "border-emerald-200 bg-emerald-100 text-emerald-800"
+                              : appointment.status ===
+                                  AppointmentStatus.Cancelled
+                                ? "border-rose-200 bg-rose-100 text-rose-800"
+                                : "border-gray-200 bg-gray-100 text-gray-700"
                       }`}
                     >
                       {appointment.status}

@@ -1,7 +1,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm, type SubmitHandler } from "react-hook-form";
 import { z } from "zod";
-import type { Appointment } from "../../types/appointment";
+import { AppointmentStatus, type Appointment } from "../../types/appointment";
 import { useServices } from "../../hooks/useServices";
 import { useAppointments } from "../../hooks/useAppointments";
 import { useState } from "react";
@@ -21,6 +21,7 @@ const schema = z.object({
   date: z.string().min(1, { message: "Datum is verplicht" }),
   time: z.string().min(1, { message: "Tijd is verplicht" }),
   notes: z.string().optional(),
+  status: z.enum(AppointmentStatus),
 });
 
 type FormFields = z.infer<typeof schema>;
@@ -50,6 +51,7 @@ function NewAppointmentForm({
       date: appointmentToEdit?.date ?? "",
       time: appointmentToEdit?.time ?? "",
       notes: appointmentToEdit?.notes ?? "",
+      status: appointmentToEdit?.status ?? AppointmentStatus.Pending,
     },
     resolver: zodResolver(schema),
   });
@@ -65,7 +67,7 @@ function NewAppointmentForm({
         date: data.date,
         time: data.time,
         notes: data.notes,
-        status: appointmentToEdit?.status ?? "Bevestigd",
+        status: data.status,
       };
       if (appointmentToEdit) {
         onAppointmentUpdated(appointment);
@@ -206,6 +208,30 @@ function NewAppointmentForm({
                 <p className="text-sm text-red-500">{errors.time.message}</p>
               )}
             </div>
+          </div>
+        </div>
+
+        {/* Status */}
+        <div>
+          <label className="mb-1.5 block text-sm font-medium text-gray-700">
+            Status
+          </label>
+
+          <select
+            {...register("status")}
+            className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+          >
+            {Object.values(AppointmentStatus).map((status) => (
+              <option key={status} value={status}>
+                {status}
+              </option>
+            ))}
+          </select>
+
+          <div className="h-2">
+            {errors.status && (
+              <p className="text-sm text-red-500">{errors.status.message}</p>
+            )}
           </div>
         </div>
 
