@@ -2,7 +2,8 @@ import { useState } from "react";
 import { useAppointments } from "../../hooks/useAppointments";
 import { useServices } from "../../hooks/useServices";
 import { useCustomers } from "../../hooks/useCustomers";
-import { CalendarDays } from "lucide-react";
+import { CalendarDays, Clock } from "lucide-react";
+import { useSettings } from "../../hooks/useSettings";
 
 function AppointmentCalendar() {
   const [currentDate, setCurrentDate] = useState(new Date());
@@ -10,7 +11,22 @@ function AppointmentCalendar() {
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const { customers } = useCustomers();
   const { services } = useServices();
+  const { openingHours } = useSettings();
   const today = new Date();
+  const dayNames = [
+    "Zondag",
+    "Maandag",
+    "Dinsdag",
+    "Woensdag",
+    "Donderdag",
+    "Vrijdag",
+    "Zaterdag",
+  ];
+  const selectedDayOpeningHours = selectedDate
+    ? openingHours.days.find(
+        (day) => day.day === dayNames[selectedDate.getDay()],
+      )
+    : undefined;
 
   const getAppointmentCount = (date: Date) => {
     const dateString = [
@@ -156,19 +172,21 @@ function AppointmentCalendar() {
                       }
                       className={`relative mx-auto flex h-8 w-full items-center justify-center rounded-lg text-xs transition
   ${
-    selectedDate?.getFullYear() === month.getFullYear() &&
-    selectedDate?.getMonth() === month.getMonth() &&
-    selectedDate?.getDate() === day
-      ? "bg-blue-600 font-semibold text-white"
-      : today.getFullYear() === month.getFullYear() &&
-          today.getMonth() === month.getMonth() &&
-          today.getDate() === day
-        ? "border border-blue-600 font-semibold text-blue-600"
-        : getAppointmentCount(
-              new Date(month.getFullYear(), month.getMonth(), day),
-            ) > 0
-          ? "bg-blue-100 font-semibold text-blue-700 hover:bg-blue-200"
-          : "text-gray-700 hover:bg-blue-50"
+    selectedDayOpeningHours?.enabled === false
+      ? "bg-gray-300 font-semibold text-white"
+      : selectedDate?.getFullYear() === month.getFullYear() &&
+          selectedDate?.getMonth() === month.getMonth() &&
+          selectedDate?.getDate() === day
+        ? "bg-blue-600 font-semibold text-white"
+        : today.getFullYear() === month.getFullYear() &&
+            today.getMonth() === month.getMonth() &&
+            today.getDate() === day
+          ? "border border-blue-600 font-semibold text-blue-600"
+          : getAppointmentCount(
+                new Date(month.getFullYear(), month.getMonth(), day),
+              ) > 0
+            ? "bg-blue-100 font-semibold text-blue-700 hover:bg-blue-200"
+            : "text-gray-700 hover:bg-blue-50"
   }`}
                     >
                       <span>{day}</span>
@@ -215,7 +233,49 @@ function AppointmentCalendar() {
               })
             : "Selecteer een dag"}
         </h3>
+        {selectedDate && selectedDayOpeningHours && (
+          <div
+            className={`mb-4 flex items-center justify-between rounded-lg border p-3 ${
+              selectedDayOpeningHours.enabled
+                ? "border-emerald-200 bg-emerald-50"
+                : "border-gray-200 bg-gray-100"
+            }`}
+          >
+            <div className="flex items-center gap-3">
+              <div
+                className={`flex h-9 w-9 items-center justify-center rounded-lg ${
+                  selectedDayOpeningHours.enabled
+                    ? "bg-emerald-100 text-emerald-700"
+                    : "bg-gray-200 text-gray-500"
+                }`}
+              >
+                <Clock size={18} />
+              </div>
 
+              <div>
+                <p className="text-sm font-medium text-gray-700">
+                  Openingstijden
+                </p>
+
+                <p className="text-sm text-gray-600">
+                  {selectedDayOpeningHours.enabled
+                    ? `${selectedDayOpeningHours.openTime} - ${selectedDayOpeningHours.closeTime}`
+                    : "Gesloten"}
+                </p>
+              </div>
+            </div>
+
+            <span
+              className={`rounded-full px-3 py-1 text-xs font-semibold ${
+                selectedDayOpeningHours.enabled
+                  ? "bg-emerald-100 text-emerald-700"
+                  : "bg-gray-200 text-gray-600"
+              }`}
+            >
+              {selectedDayOpeningHours.enabled ? "Geopend" : "Gesloten"}
+            </span>
+          </div>
+        )}
         {!selectedDate ? (
           <p className="text-sm text-gray-500">
             Klik op een dag in de kalender om de afspraken te bekijken.
