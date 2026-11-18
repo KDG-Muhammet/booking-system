@@ -1,5 +1,5 @@
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm, type SubmitHandler } from "react-hook-form";
+import { useForm, useWatch, type SubmitHandler } from "react-hook-form";
 import { z } from "zod";
 import { AppointmentStatus, type Appointment } from "../../types/appointment";
 import { useServices } from "../../hooks/useServices";
@@ -8,6 +8,7 @@ import { useState } from "react";
 import { useCustomers } from "../../hooks/useCustomers";
 import Modal from "./Modal";
 import NewCustomerForm from "./NewCustomerForm";
+import { useSettings } from "../../hooks/useSettings";
 
 interface NewAppointmentFormProps {
   onClose: () => void;
@@ -32,10 +33,11 @@ function NewAppointmentForm({
   onAppointmentUpdated,
 }: NewAppointmentFormProps) {
   const { services } = useServices();
-  const { addAppointment } = useAppointments();
+  const { appointments, addAppointment } = useAppointments();
   const [isCustomerModalOpen, setIsCustomerModalOpen] = useState(false);
   const [selectedCustomerId, setSelectedCustomerId] = useState("");
   const { customers } = useCustomers();
+  const { openingHours } = useSettings();
 
   // destructure useForm hook to get the register and connect input fields to react hook form
   const {
@@ -43,6 +45,7 @@ function NewAppointmentForm({
     handleSubmit,
     setError,
     setValue,
+    control,
     formState: { errors, isSubmitting },
   } = useForm<FormFields>({
     defaultValues: {
@@ -55,6 +58,99 @@ function NewAppointmentForm({
     },
     resolver: zodResolver(schema),
   });
+
+  const selectedDate = useWatch({
+    control,
+    name: "date",
+  });
+
+  const selectedServiceId = useWatch({
+    control,
+    name: "service",
+  });
+
+  const dayNames = [
+    "Zondag",
+    "Maandag",
+    "Dinsdag",
+    "Woensdag",
+    "Donderdag",
+    "Vrijdag",
+    "Zaterdag",
+  ];
+
+  const selectedDayOpeningHours = selectedDate
+    ? openingHours.days.find(
+        (day) =>
+          day.day === dayNames[new Date(`${selectedDate}T00:00:00`).getDay()],
+      )
+    : undefined;
+
+  const selectedService = services.find(
+    (service) => service.id === Number(selectedServiceId),
+  );
+
+  const minutesToTime = (minutes: number): string => {
+    const hours = Math.floor(minutes / 60);
+    const remainingMinutes = minutes % 60;
+
+    return `${String(hours).padStart(2, "0")}:${String(remainingMinutes).padStart(2, "0")}`;
+  };
+
+  const timeToMinutes = (time: string): number => {
+    const [hours, minutes] = time.split(":").map(Number);
+    return hours * 60 + minutes;
+  };
+
+  const availableTimeSlots: string[] = [];
+
+  if (selectedDate && selectedDayOpeningHours?.enabled && selectedService) {
+    const openingTime = timeToMinutes(selectedDayOpeningHours.openTime);
+    const closingTime = timeToMinutes(selectedDayOpeningHours.closeTime);
+    const serviceDuration = selectedService.duration;
+
+    for (
+      let time = openingTime;
+      time + serviceDuration <= closingTime;
+      time += 15
+    ) {
+      const appointmentEnd = time + serviceDuration;
+
+      const hasConflict = appointments.some((appointment) => {
+        // De huidige afspraak bij bewerken niet meetellen.
+        if (appointment.id === appointmentToEdit?.id) {
+          return false;
+        }
+
+        // Alleen afspraken op dezelfde datum controleren.
+        if (appointment.date !== selectedDate) {
+          return false;
+        }
+
+        // Geannuleerde afspraken blokkeren geen tijdstip.
+        if (appointment.status === AppointmentStatus.Cancelled) {
+          return false;
+        }
+
+        const existingService = services.find(
+          (service) => service.id === appointment.serviceId,
+        );
+
+        if (!existingService) {
+          return false;
+        }
+
+        const existingStart = timeToMinutes(appointment.time);
+        const existingEnd = existingStart + existingService.duration;
+
+        return time < existingEnd && appointmentEnd > existingStart;
+      });
+
+      if (!hasConflict) {
+        availableTimeSlots.push(minutesToTime(time));
+      }
+    }
+  }
 
   const onSubmit: SubmitHandler<FormFields> = async (data) => {
     try {
@@ -198,16 +294,68 @@ function NewAppointmentForm({
               Tijd
             </label>
 
-            <input
+            <select
               {...register("time")}
-              type="time"
-              className="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
-            />
+              disabled={
+                !selectedDate ||
+                !selectedDayOpeningHours?.enabled ||
+                !selectedService ||
+                availableTimeSlots.length === 0
+              }
+              className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 disabled:cursor-not-allowed disabled:bg-gray-100 disabled:text-gray-400"
+            >
+              <option value="" disabled>
+                Selecteer een tijdstip
+              </option>
+
+              {appointmentToEdit?.time &&
+                !availableTimeSlots.includes(appointmentToEdit.time) && (
+                  <option value={appointmentToEdit.time} disabled>
+                    {appointmentToEdit.time} (niet beschikbaar)
+                  </option>
+                )}
+
+              {availableTimeSlots.map((time) => (
+                <option key={time} value={time}>
+                  {time}
+                </option>
+              ))}
+            </select>
+
             <div className="h-2">
               {errors.time && (
                 <p className="text-sm text-red-500">{errors.time.message}</p>
               )}
             </div>
+
+            {!selectedDate && (
+              <p className="mt-1 text-xs text-gray-500">
+                Selecteer eerst een datum.
+              </p>
+            )}
+
+            {selectedDate && !selectedDayOpeningHours?.enabled && (
+              <p className="mt-1 text-xs text-red-500">
+                De zaak is op deze dag gesloten.
+              </p>
+            )}
+
+            {selectedDate &&
+              selectedDayOpeningHours?.enabled &&
+              !selectedService && (
+                <p className="mt-1 text-xs text-gray-500">
+                  Selecteer eerst een dienst.
+                </p>
+              )}
+
+            {selectedDate &&
+              selectedDayOpeningHours?.enabled &&
+              selectedService &&
+              availableTimeSlots.length === 0 && (
+                <p className="mt-1 text-xs text-red-500">
+                  Er zijn geen beschikbare tijdstippen voor deze dag.
+                </p>
+              )}
           </div>
         </div>
 
