@@ -86,6 +86,28 @@ function getAvailableTimeSlots({
   return slots;
 }
 
+function Field({
+  label,
+  error,
+  children,
+}: {
+  label: string;
+  error?: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <div>
+      <label className="mb-1.5 block text-sm font-medium text-gray-700">
+        {label}
+      </label>
+      {children}
+      <div className="min-h-2">
+        {error && <p className="text-sm text-red-500">{error}</p>}
+      </div>
+    </div>
+  );
+}
+
 function NewAppointmentForm({
   onClose,
   appointmentToEdit,
@@ -150,6 +172,24 @@ function NewAppointmentForm({
         })
       : [];
 
+  let timeHint: { text: string; isError: boolean } | null = null;
+
+  if (!selectedDate) {
+    timeHint = { text: "Selecteer eerst een datum.", isError: false };
+  } else if (!selectedDayOpeningHours?.enabled) {
+    timeHint = {
+      text: "De zaak is op deze dag gesloten.",
+      isError: true,
+    };
+  } else if (!selectedService) {
+    timeHint = { text: "Selecteer eerst een dienst.", isError: false };
+  } else if (availableTimeSlots.length === 0) {
+    timeHint = {
+      text: "Er zijn geen beschikbare tijdstippen voor deze dag.",
+      isError: true,
+    };
+  }
+
   const onSubmit: SubmitHandler<FormFields> = async (data) => {
     try {
       await new Promise((resolve) => setTimeout(resolve, 1000));
@@ -182,11 +222,6 @@ function NewAppointmentForm({
     <>
       <form className="space-y-3" onSubmit={handleSubmit(onSubmit)}>
         {/* Customer */}
-
-        <label className="mb-1.5 block text-sm font-medium text-gray-700">
-          Klant
-        </label>
-
         {appointmentToEdit ? (
           <input
             type="text"
@@ -200,28 +235,22 @@ function NewAppointmentForm({
           />
         ) : (
           <div>
-            <select
-              {...register("customerId")}
-              className="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
-            >
-              <option value="" disabled>
-                Selecteer een klant
-              </option>
-
-              {customers.map((customer) => (
-                <option key={customer.id} value={customer.id}>
-                  {customer.name}
+            <Field label="Klant" error={errors.customerId?.message}>
+              <select
+                {...register("customerId")}
+                className="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+              >
+                <option value="" disabled>
+                  Selecteer een klant
                 </option>
-              ))}
-            </select>
 
-            <div className="h-2">
-              {errors.customerId && (
-                <p className="text-sm text-red-500">
-                  {errors.customerId.message}
-                </p>
-              )}
-            </div>
+                {customers.map((customer) => (
+                  <option key={customer.id} value={customer.id}>
+                    {customer.name}
+                  </option>
+                ))}
+              </select>
+            </Field>
 
             <button
               type="button"
@@ -233,161 +262,104 @@ function NewAppointmentForm({
             </button>
           </div>
         )}
+
         {/* Service */}
         <div>
-          <label className="mb-1.5 block text-sm font-medium text-gray-700">
-            Dienst
-          </label>
+          <Field label="Dienst" error={errors.service?.message}>
+            <select
+              {...register("service", { onChange: () => setValue("time", "") })}
+              className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+              defaultValue=""
+            >
+              <option value="" disabled>
+                Selecteer een dienst
+              </option>
 
-          <select
-            {...register("service", { onChange: () => setValue("time", "") })}
-            className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
-            defaultValue=""
-          >
-            <option value="" disabled>
-              Selecteer een dienst
-            </option>
-
-            {services
-              .filter((service) => service.active)
-              .map((service) => (
-                <option key={service.id} value={service.id}>
-                  {service.name} - €{service.price}
-                </option>
-              ))}
-          </select>
-          <div className="h-2">
-            {errors.service && (
-              <p className="text-sm text-red-500">{errors.service.message}</p>
-            )}
-          </div>
+              {services
+                .filter((service) => service.active)
+                .map((service) => (
+                  <option key={service.id} value={service.id}>
+                    {service.name} - €{service.price}
+                  </option>
+                ))}
+            </select>
+          </Field>
         </div>
 
         {/* Date + Time */}
         <div className="grid grid-cols-2 gap-4">
+          {/* Date */}
           <div>
-            <label className="mb-1.5 block text-sm font-medium text-gray-700">
-              Datum
-            </label>
-
-            <input
-              {...register("date", { onChange: () => setValue("time", "") })}
-              type="date"
-              className="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
-            />
-            <div className="h-2">
-              {errors.date && (
-                <p className="text-sm text-red-500">{errors.date.message}</p>
-              )}
-            </div>
+            <Field label="Datum" error={errors.date?.message}>
+              <input
+                {...register("date", { onChange: () => setValue("time", "") })}
+                type="date"
+                className="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+              />
+            </Field>
           </div>
-
+          {/* Time */}
           <div>
-            <label className="mb-1.5 block text-sm font-medium text-gray-700">
-              Tijd
-            </label>
-
-            <select
-              {...register("time")}
-              disabled={
-                !selectedDate ||
-                !selectedDayOpeningHours?.enabled ||
-                !selectedService ||
-                availableTimeSlots.length === 0
-              }
-              className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 disabled:cursor-not-allowed disabled:bg-gray-100 disabled:text-gray-400"
-            >
-              <option value="" disabled>
-                Selecteer een tijdstip
-              </option>
-
-              {appointmentToEdit?.time &&
-                !availableTimeSlots.includes(appointmentToEdit.time) && (
-                  <option value={appointmentToEdit.time} disabled>
-                    {appointmentToEdit.time} (niet beschikbaar)
-                  </option>
-                )}
-
-              {availableTimeSlots.map((time) => (
-                <option key={time} value={time}>
-                  {time}
+            <Field label="Tijd" error={errors.time?.message}>
+              <select
+                {...register("time")}
+                disabled={!!timeHint}
+                className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 disabled:cursor-not-allowed disabled:bg-gray-100 disabled:text-gray-400"
+              >
+                <option value="" disabled>
+                  Selecteer een tijdstip
                 </option>
-              ))}
-            </select>
 
-            <div className="h-2">
-              {errors.time && (
-                <p className="text-sm text-red-500">{errors.time.message}</p>
-              )}
-            </div>
+                {appointmentToEdit?.time &&
+                  !availableTimeSlots.includes(appointmentToEdit.time) && (
+                    <option value={appointmentToEdit.time} disabled>
+                      {appointmentToEdit.time} (niet beschikbaar)
+                    </option>
+                  )}
 
-            {!selectedDate && (
-              <p className="mt-1 text-xs text-gray-500">
-                Selecteer eerst een datum.
+                {availableTimeSlots.map((time) => (
+                  <option key={time} value={time}>
+                    {time}
+                  </option>
+                ))}
+              </select>
+            </Field>
+            {timeHint && (
+              <p
+                className={`mt-1 text-xs ${timeHint.isError ? "text-red-500" : "text-gray-500"}`}
+              >
+                {timeHint.text}
               </p>
             )}
-
-            {selectedDate && !selectedDayOpeningHours?.enabled && (
-              <p className="mt-1 text-xs text-red-500">
-                De zaak is op deze dag gesloten.
-              </p>
-            )}
-
-            {selectedDate &&
-              selectedDayOpeningHours?.enabled &&
-              !selectedService && (
-                <p className="mt-1 text-xs text-gray-500">
-                  Selecteer eerst een dienst.
-                </p>
-              )}
-
-            {selectedDate &&
-              selectedDayOpeningHours?.enabled &&
-              selectedService &&
-              availableTimeSlots.length === 0 && (
-                <p className="mt-1 text-xs text-red-500">
-                  Er zijn geen beschikbare tijdstippen voor deze dag.
-                </p>
-              )}
           </div>
         </div>
 
         {/* Status */}
         <div>
-          <label className="mb-1.5 block text-sm font-medium text-gray-700">
-            Status
-          </label>
-
-          <select
-            {...register("status")}
-            className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
-          >
-            {Object.values(AppointmentStatus).map((status) => (
-              <option key={status} value={status}>
-                {status}
-              </option>
-            ))}
-          </select>
-
-          <div className="h-2">
-            {errors.status && (
-              <p className="text-sm text-red-500">{errors.status.message}</p>
-            )}
-          </div>
+          <Field label="Status" error={errors.status?.message}>
+            <select
+              {...register("status")}
+              className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+            >
+              {Object.values(AppointmentStatus).map((status) => (
+                <option key={status} value={status}>
+                  {status}
+                </option>
+              ))}
+            </select>
+          </Field>
         </div>
 
         {/* Notes */}
         <div>
-          <label className="mb-1.5 block text-sm font-medium text-gray-700">
-            Notities
-          </label>
-
-          <textarea
-            rows={3}
-            placeholder="Optionele notities..."
-            className="w-full resize-none rounded-lg border border-gray-300 px-3 py-2.5 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
-            {...register("notes")}
-          />
+          <Field label="Notities" error={errors.notes?.message}>
+            <textarea
+              rows={3}
+              placeholder="Optionele notities..."
+              className="w-full resize-none rounded-lg border border-gray-300 px-3 py-2.5 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+              {...register("notes")}
+            />
+          </Field>
         </div>
 
         {/* Buttons */}
