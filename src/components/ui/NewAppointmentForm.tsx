@@ -9,6 +9,7 @@ import { useCustomers } from "../../hooks/useCustomers";
 import Modal from "./Modal";
 import NewCustomerForm from "./NewCustomerForm";
 import { useSettings } from "../../hooks/useSettings";
+import type { Service } from "../../types/service";
 
 interface NewAppointmentFormProps {
   onClose: () => void;
@@ -27,6 +28,64 @@ const schema = z.object({
 
 type FormFields = z.infer<typeof schema>;
 
+const STEP = 15; // minuten tussen tijdsloten
+
+const toMinutes = (time: string) => {
+  const [h, m] = time.split(":").map(Number);
+  return h * 60 + m;
+};
+
+const toTime = (min: number) =>
+  `${String(Math.floor(min / 60)).padStart(2, "0")}:${String(min % 60).padStart(2, "0")}`;
+
+function getAvailableTimeSlots({
+  date,
+  openTime,
+  closeTime,
+  duration,
+  services,
+  appointments,
+  ignoreId,
+}: {
+  date: string;
+  openTime: string;
+  closeTime: string;
+  duration: number;
+  services: Service[];
+  appointments: Appointment[];
+  ignoreId?: number;
+}): string[] {
+  const durations = new Map(services.map((s) => [s.id, s.duration]));
+
+  // Bezette blokken als [start, einde] in minuten
+  const busy = appointments
+    .filter(
+      (a) =>
+        a.id !== ignoreId &&
+        a.date === date &&
+        a.status !== AppointmentStatus.Cancelled &&
+        durations.has(a.serviceId),
+    )
+    .map((a) => {
+      const start = toMinutes(a.time);
+      return [start, start + durations.get(a.serviceId)!];
+    });
+
+  const slots: string[] = [];
+  const close = toMinutes(closeTime);
+
+  for (
+    let start = toMinutes(openTime);
+    start + duration <= close;
+    start += STEP
+  ) {
+    const isFree = !busy.some(([s, e]) => start < e && start + duration > s);
+    if (isFree) slots.push(toTime(start));
+  }
+
+  return slots;
+}
+
 function NewAppointmentForm({
   onClose,
   appointmentToEdit,
@@ -35,7 +94,6 @@ function NewAppointmentForm({
   const { services } = useServices();
   const { appointments, addAppointment } = useAppointments();
   const [isCustomerModalOpen, setIsCustomerModalOpen] = useState(false);
-  const [selectedCustomerId, setSelectedCustomerId] = useState("");
   const { customers } = useCustomers();
   const { openingHours } = useSettings();
 
@@ -69,20 +127,9 @@ function NewAppointmentForm({
     name: "service",
   });
 
-  const dayNames = [
-    "Zondag",
-    "Maandag",
-    "Dinsdag",
-    "Woensdag",
-    "Donderdag",
-    "Vrijdag",
-    "Zaterdag",
-  ];
-
   const selectedDayOpeningHours = selectedDate
     ? openingHours.days.find(
-        (day) =>
-          day.day === dayNames[new Date(`${selectedDate}T00:00:00`).getDay()],
+        (day) => day.day === new Date(`${selectedDate}T00:00:00`).getDay(),
       )
     : undefined;
 
@@ -90,67 +137,18 @@ function NewAppointmentForm({
     (service) => service.id === Number(selectedServiceId),
   );
 
-  const minutesToTime = (minutes: number): string => {
-    const hours = Math.floor(minutes / 60);
-    const remainingMinutes = minutes % 60;
-
-    return `${String(hours).padStart(2, "0")}:${String(remainingMinutes).padStart(2, "0")}`;
-  };
-
-  const timeToMinutes = (time: string): number => {
-    const [hours, minutes] = time.split(":").map(Number);
-    return hours * 60 + minutes;
-  };
-
-  const availableTimeSlots: string[] = [];
-
-  if (selectedDate && selectedDayOpeningHours?.enabled && selectedService) {
-    const openingTime = timeToMinutes(selectedDayOpeningHours.openTime);
-    const closingTime = timeToMinutes(selectedDayOpeningHours.closeTime);
-    const serviceDuration = selectedService.duration;
-
-    for (
-      let time = openingTime;
-      time + serviceDuration <= closingTime;
-      time += 15
-    ) {
-      const appointmentEnd = time + serviceDuration;
-
-      const hasConflict = appointments.some((appointment) => {
-        // De huidige afspraak bij bewerken niet meetellen.
-        if (appointment.id === appointmentToEdit?.id) {
-          return false;
-        }
-
-        // Alleen afspraken op dezelfde datum controleren.
-        if (appointment.date !== selectedDate) {
-          return false;
-        }
-
-        // Geannuleerde afspraken blokkeren geen tijdstip.
-        if (appointment.status === AppointmentStatus.Cancelled) {
-          return false;
-        }
-
-        const existingService = services.find(
-          (service) => service.id === appointment.serviceId,
-        );
-
-        if (!existingService) {
-          return false;
-        }
-
-        const existingStart = timeToMinutes(appointment.time);
-        const existingEnd = existingStart + existingService.duration;
-
-        return time < existingEnd && appointmentEnd > existingStart;
-      });
-
-      if (!hasConflict) {
-        availableTimeSlots.push(minutesToTime(time));
-      }
-    }
-  }
+  const availableTimeSlots =
+    selectedDate && selectedDayOpeningHours?.enabled && selectedService
+      ? getAvailableTimeSlots({
+          date: selectedDate,
+          openTime: selectedDayOpeningHours.openTime,
+          closeTime: selectedDayOpeningHours.closeTime,
+          duration: selectedService.duration,
+          services,
+          appointments,
+          ignoreId: appointmentToEdit?.id,
+        })
+      : [];
 
   const onSubmit: SubmitHandler<FormFields> = async (data) => {
     try {
@@ -204,11 +202,6 @@ function NewAppointmentForm({
           <div>
             <select
               {...register("customerId")}
-              value={selectedCustomerId}
-              onChange={(e) => {
-                setSelectedCustomerId(e.target.value);
-                setValue("customerId", e.target.value);
-              }}
               className="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
             >
               <option value="" disabled>
@@ -247,7 +240,7 @@ function NewAppointmentForm({
           </label>
 
           <select
-            {...register("service")}
+            {...register("service", { onChange: () => setValue("time", "") })}
             className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
             defaultValue=""
           >
@@ -278,7 +271,7 @@ function NewAppointmentForm({
             </label>
 
             <input
-              {...register("date")}
+              {...register("date", { onChange: () => setValue("time", "") })}
               type="date"
               className="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
             />
@@ -433,8 +426,9 @@ function NewAppointmentForm({
           <NewCustomerForm
             onClose={() => setIsCustomerModalOpen(false)}
             onCustomerAdded={(customer) => {
-              setSelectedCustomerId(customer.id.toString());
-              setValue("customerId", customer.id.toString());
+              setValue("customerId", customer.id.toString(), {
+                shouldValidate: true,
+              });
             }}
           />
         </Modal>

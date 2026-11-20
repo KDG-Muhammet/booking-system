@@ -13,19 +13,9 @@ function AppointmentCalendar() {
   const { services } = useServices();
   const { openingHours } = useSettings();
   const today = new Date();
-  const dayNames = [
-    "Zondag",
-    "Maandag",
-    "Dinsdag",
-    "Woensdag",
-    "Donderdag",
-    "Vrijdag",
-    "Zaterdag",
-  ];
+
   const selectedDayOpeningHours = selectedDate
-    ? openingHours.days.find(
-        (day) => day.day === dayNames[selectedDate.getDay()],
-      )
+    ? openingHours.days.find((day) => day.day === selectedDate.getDay())
     : undefined;
 
   const getAppointmentCount = (date: Date) => {
@@ -161,56 +151,60 @@ function AppointmentCalendar() {
                 (_, index) => {
                   const day = index + 1;
 
+                  const date = new Date(
+                    month.getFullYear(),
+                    month.getMonth(),
+                    day,
+                  );
+
+                  // Openingstijden van deze specifieke dag
+                  const dayOpeningHours = openingHours.days.find(
+                    (openingDay) => openingDay.day === date.getDay(),
+                  );
+
+                  const isClosed = dayOpeningHours?.enabled === false;
+
+                  const isSelected =
+                    selectedDate?.getFullYear() === date.getFullYear() &&
+                    selectedDate?.getMonth() === date.getMonth() &&
+                    selectedDate?.getDate() === date.getDate();
+
+                  const isToday =
+                    today.getFullYear() === date.getFullYear() &&
+                    today.getMonth() === date.getMonth() &&
+                    today.getDate() === date.getDate();
+
+                  const appointmentCount = getAppointmentCount(date);
+                  const hasAppointments = appointmentCount > 0;
+
                   return (
                     <button
                       key={day}
                       type="button"
-                      onClick={() =>
-                        setSelectedDate(
-                          new Date(month.getFullYear(), month.getMonth(), day),
-                        )
-                      }
-                      className={`relative mx-auto flex h-8 w-full items-center justify-center rounded-lg text-xs transition
-  ${
-    selectedDayOpeningHours?.enabled === false
-      ? "bg-gray-300 font-semibold text-white"
-      : selectedDate?.getFullYear() === month.getFullYear() &&
-          selectedDate?.getMonth() === month.getMonth() &&
-          selectedDate?.getDate() === day
-        ? "bg-blue-600 font-semibold text-white"
-        : today.getFullYear() === month.getFullYear() &&
-            today.getMonth() === month.getMonth() &&
-            today.getDate() === day
-          ? "border border-blue-600 font-semibold text-blue-600"
-          : getAppointmentCount(
-                new Date(month.getFullYear(), month.getMonth(), day),
-              ) > 0
-            ? "bg-blue-100 font-semibold text-blue-700 hover:bg-blue-200"
-            : "text-gray-700 hover:bg-blue-50"
-  }`}
+                      onClick={() => setSelectedDate(date)}
+                      className={`relative mx-auto flex h-8 w-full items-center justify-center rounded-lg text-xs transition ${
+                        isSelected
+                          ? "bg-blue-600 font-semibold text-white"
+                          : isToday
+                            ? "border border-blue-600 bg-emerald-50 font-semibold text-blue-700"
+                            : hasAppointments
+                              ? "bg-blue-100 font-semibold text-blue-700 hover:bg-blue-200"
+                              : isClosed
+                                ? "bg-gray-200 font-medium text-gray-500 hover:bg-gray-300"
+                                : "bg-emerald-50 text-emerald-700 hover:bg-emerald-100"
+                      }`}
                     >
                       <span>{day}</span>
 
-                      {getAppointmentCount(
-                        new Date(month.getFullYear(), month.getMonth(), day),
-                      ) > 0 && (
+                      {hasAppointments && (
                         <span
                           className={`absolute -right-1 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-[9px] font-semibold ${
-                            selectedDate?.getFullYear() ===
-                              month.getFullYear() &&
-                            selectedDate?.getMonth() === month.getMonth() &&
-                            selectedDate?.getDate() === day
+                            isSelected
                               ? "bg-white text-blue-600"
                               : "bg-blue-600 text-white"
                           }`}
                         >
-                          {getAppointmentCount(
-                            new Date(
-                              month.getFullYear(),
-                              month.getMonth(),
-                              day,
-                            ),
-                          )}
+                          {appointmentCount}
                         </span>
                       )}
                     </button>
