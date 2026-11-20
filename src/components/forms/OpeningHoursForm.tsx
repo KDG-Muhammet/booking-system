@@ -8,7 +8,7 @@ const openingHoursSchema = z
   .object({
     days: z.array(
       z.object({
-        day: z.string(),
+        day: z.int().min(0).max(6),
         enabled: z.boolean(),
         openTime: z.string(),
         closeTime: z.string(),
@@ -46,6 +46,15 @@ const openingHoursSchema = z
   });
 
 type OpeningHoursFormFields = z.infer<typeof openingHoursSchema>;
+
+const getDayName = (day: number): string => {
+  const date = new Date(Date.UTC(2024, 0, 7 + day));
+
+  return new Intl.DateTimeFormat(navigator.language || "nl-BE", {
+    weekday: "long",
+    timeZone: "UTC",
+  }).format(date);
+};
 
 function OpeningHoursForm() {
   const { openingHours, updateOpeningHours } = useSettings();
@@ -95,7 +104,7 @@ function OpeningHoursForm() {
                 />
 
                 <span className="text-sm font-medium text-gray-700">
-                  {field.day}
+                  {getDayName(field.day)}
                 </span>
               </div>
 

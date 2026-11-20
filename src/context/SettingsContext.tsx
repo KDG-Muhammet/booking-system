@@ -21,13 +21,13 @@ export const SettingsContext = createContext<SettingsContextType | undefined>(
 
 const defaultOpeningHours: OpeningHoursSettings = {
   days: [
-    { day: "Maandag", enabled: true, openTime: "09:00", closeTime: "18:00" },
-    { day: "Dinsdag", enabled: true, openTime: "09:00", closeTime: "18:00" },
-    { day: "Woensdag", enabled: true, openTime: "09:00", closeTime: "18:00" },
-    { day: "Donderdag", enabled: true, openTime: "09:00", closeTime: "18:00" },
-    { day: "Vrijdag", enabled: true, openTime: "09:00", closeTime: "18:00" },
-    { day: "Zaterdag", enabled: true, openTime: "09:00", closeTime: "18:00" },
-    { day: "Zondag", enabled: false, openTime: "09:00", closeTime: "18:00" },
+    { day: 1, enabled: true, openTime: "09:00", closeTime: "18:00" },
+    { day: 2, enabled: true, openTime: "09:00", closeTime: "18:00" },
+    { day: 3, enabled: true, openTime: "09:00", closeTime: "18:00" },
+    { day: 4, enabled: true, openTime: "09:00", closeTime: "18:00" },
+    { day: 5, enabled: true, openTime: "09:00", closeTime: "18:00" },
+    { day: 6, enabled: true, openTime: "09:00", closeTime: "18:00" },
+    { day: 0, enabled: false, openTime: "09:00", closeTime: "18:00" },
   ],
 };
 

@@ -7,7 +7,7 @@ export interface BusinessSettings {
 }
 
 export interface OpeningDay {
-  day: string;
+  day: number;
   enabled: boolean;
   openTime: string;
   closeTime: string;
