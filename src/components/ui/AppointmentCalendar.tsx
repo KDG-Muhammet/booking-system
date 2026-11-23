@@ -123,7 +123,7 @@ function AppointmentCalendar() {
             </div>
 
             {/* Calendar days */}
-            <div className="grid grid-cols-7 gap-y-1 text-center">
+            <div className="grid grid-cols-7 gap-1 text-center">
               {Array.from(
                 {
                   length:
@@ -186,12 +186,12 @@ function AppointmentCalendar() {
                         isSelected
                           ? "bg-blue-600 font-semibold text-white"
                           : isToday
-                            ? "border border-blue-600 bg-emerald-50 font-semibold text-blue-700"
+                            ? "border border-blue-600 bg-emerald-100 font-semibold text-blue-700"
                             : hasAppointments
                               ? "bg-blue-100 font-semibold text-blue-700 hover:bg-blue-200"
                               : isClosed
                                 ? "bg-gray-200 font-medium text-gray-500 hover:bg-gray-300"
-                                : "bg-emerald-50 text-emerald-700 hover:bg-emerald-100"
+                                : "bg-emerald-100 text-emerald-700 hover:bg-emerald-100"
                       }`}
                     >
                       <span>{day}</span>

@@ -9,7 +9,7 @@ import { useCustomers } from "../../hooks/useCustomers";
 import Modal from "./Modal";
 import NewCustomerForm from "./NewCustomerForm";
 import { useSettings } from "../../hooks/useSettings";
-import type { Service } from "../../types/service";
+import { getAvailableTimeSlots } from "../../utils/timeSlots";
 
 interface NewAppointmentFormProps {
   onClose: () => void;
@@ -18,73 +18,15 @@ interface NewAppointmentFormProps {
 }
 
 const schema = z.object({
-  customerId: z.string().min(1, { message: "Klant is verplicht" }),
-  service: z.string().min(1, { message: "Dienst is verplicht" }),
-  date: z.string().min(1, { message: "Datum is verplicht" }),
-  time: z.string().min(1, { message: "Tijd is verplicht" }),
+  customerId: z.string().min(1, "Klant is verplicht"),
+  service: z.string().min(1, "Dienst is verplicht"),
+  date: z.string().min(1, "Datum is verplicht"),
+  time: z.string().min(1, "Tijd is verplicht"),
   notes: z.string().optional(),
   status: z.enum(AppointmentStatus),
 });
 
 type FormFields = z.infer<typeof schema>;
-
-const STEP = 15; // minuten tussen tijdsloten
-
-const toMinutes = (time: string) => {
-  const [h, m] = time.split(":").map(Number);
-  return h * 60 + m;
-};
-
-const toTime = (min: number) =>
-  `${String(Math.floor(min / 60)).padStart(2, "0")}:${String(min % 60).padStart(2, "0")}`;
-
-function getAvailableTimeSlots({
-  date,
-  openTime,
-  closeTime,
-  duration,
-  services,
-  appointments,
-  ignoreId,
-}: {
-  date: string;
-  openTime: string;
-  closeTime: string;
-  duration: number;
-  services: Service[];
-  appointments: Appointment[];
-  ignoreId?: number;
-}): string[] {
-  const durations = new Map(services.map((s) => [s.id, s.duration]));
-
-  // Bezette blokken als [start, einde] in minuten
-  const busy = appointments
-    .filter(
-      (a) =>
-        a.id !== ignoreId &&
-        a.date === date &&
-        a.status !== AppointmentStatus.Cancelled &&
-        durations.has(a.serviceId),
-    )
-    .map((a) => {
-      const start = toMinutes(a.time);
-      return [start, start + durations.get(a.serviceId)!];
-    });
-
-  const slots: string[] = [];
-  const close = toMinutes(closeTime);
-
-  for (
-    let start = toMinutes(openTime);
-    start + duration <= close;
-    start += STEP
-  ) {
-    const isFree = !busy.some(([s, e]) => start < e && start + duration > s);
-    if (isFree) slots.push(toTime(start));
-  }
-
-  return slots;
-}
 
 function Field({
   label,
@@ -101,8 +43,8 @@ function Field({
         {label}
       </label>
       {children}
-      <div className="min-h-2">
-        {error && <p className="text-sm text-red-500">{error}</p>}
+      <div className="h-2 pl-4">
+        {error && <p className="text-xs text-red-500">{error}</p>}
       </div>
     </div>
   );
@@ -139,14 +81,9 @@ function NewAppointmentForm({
     resolver: zodResolver(schema),
   });
 
-  const selectedDate = useWatch({
+  const [selectedDate, selectedServiceId] = useWatch({
     control,
-    name: "date",
-  });
-
-  const selectedServiceId = useWatch({
-    control,
-    name: "service",
+    name: ["date", "service"],
   });
 
   const selectedDayOpeningHours = selectedDate
@@ -250,16 +187,15 @@ function NewAppointmentForm({
                   </option>
                 ))}
               </select>
+              <button
+                type="button"
+                onClick={() => setIsCustomerModalOpen(true)}
+                className="inline-flex items-center gap-2 text-sm font-medium text-blue-600 border border-blue-600 rounded-full px-1 hover:bg-blue-100"
+              >
+                <span className="">+</span>
+                Nieuwe klant toevoegen
+              </button>
             </Field>
-
-            <button
-              type="button"
-              onClick={() => setIsCustomerModalOpen(true)}
-              className="mt-2 inline-flex items-center gap-2 text-sm font-medium text-blue-600 hover:text-blue-700"
-            >
-              <span>+</span>
-              Nieuwe klant toevoegen
-            </button>
           </div>
         )}
 
@@ -381,7 +317,7 @@ function NewAppointmentForm({
               ? "Bezig met opslaan..."
               : appointmentToEdit
                 ? "Wijzigingen opslaan"
-                : "Afspraken maken"}
+                : "Afspraak maken"}
           </button>
           {errors.root && (
             <p className="text-sm text-red-500">{errors.root.message}</p>
@@ -389,22 +325,20 @@ function NewAppointmentForm({
         </div>
       </form>
 
-      {isCustomerModalOpen && (
-        <Modal
-          isOpen={true}
+      <Modal
+        isOpen={isCustomerModalOpen}
+        onClose={() => setIsCustomerModalOpen(false)}
+        title="Nieuwe klant toevoegen"
+      >
+        <NewCustomerForm
           onClose={() => setIsCustomerModalOpen(false)}
-          title="Nieuwe klant toevoegen"
-        >
-          <NewCustomerForm
-            onClose={() => setIsCustomerModalOpen(false)}
-            onCustomerAdded={(customer) => {
-              setValue("customerId", customer.id.toString(), {
-                shouldValidate: true,
-              });
-            }}
-          />
-        </Modal>
-      )}
+          onCustomerAdded={(customer) => {
+            setValue("customerId", customer.id.toString(), {
+              shouldValidate: true,
+            });
+          }}
+        />
+      </Modal>
     </>
   );
 }
