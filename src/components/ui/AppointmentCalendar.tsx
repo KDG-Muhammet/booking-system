@@ -139,68 +139,43 @@ function AppointmentCalendar() {
       </div>
       {/* Three months */}
       <div className="grid grid-cols-1 gap-5 sm:grid-cols-3">
-        {months.map((month, index) => (
-          <div
-            key={month.toISOString()}
-            className={`rounded-xl border p-3 ${
-              index === 0
-                ? "border-blue-200 bg-blue-50/70"
-                : index === 1
-                  ? "border-violet-200 bg-violet-50/70"
-                  : "border-emerald-200 bg-emerald-50/70"
-            }`}
-          >
-            <h3 className="mb-3 rounded-lg bg-white/80 px-2 py-2 text-center text-sm font-bold capitalize text-gray-800 shadow-sm">
-              {month.toLocaleDateString("nl-BE", {
-                month: "long",
-                year: "numeric",
-              })}
-            </h3>
+        {months.map((month) => {
+          const year = month.getFullYear();
+          const monthIndex = month.getMonth();
+          const leadingEmptyCells =
+            (new Date(year, monthIndex, 1).getDay() + 6) % 7;
+          const daysInMonth = new Date(year, monthIndex + 1, 0).getDate();
 
-            {/* Weekdays */}
-            <div className="mb-2 grid grid-cols-7 text-center">
-              {WEEKDAYS.map((day) => (
-                <span key={day} className="text-xs font-medium text-gray-400">
-                  {day}
-                </span>
-              ))}
-            </div>
+          return (
+            <div
+              key={toDateKey(month)}
+              className="rounded-xl border p-3 border-blue-200 bg-blue-50/70"
+            >
+              <h3 className="mb-3 rounded-lg bg-white/80 px-2 py-2 text-center text-sm font-bold capitalize text-gray-800 shadow-sm">
+                {month.toLocaleDateString("nl-BE", {
+                  month: "long",
+                  year: "numeric",
+                })}
+              </h3>
 
-            {/* Calendar days */}
-            <div className="grid grid-cols-7 gap-1 text-center">
-              {Array.from(
-                {
-                  length:
-                    (new Date(
-                      month.getFullYear(),
-                      month.getMonth(),
-                      1,
-                    ).getDay() +
-                      6) %
-                    7,
-                },
-                (_, index) => (
-                  <div key={`empty-${index}`} />
-                ),
-              )}
+              {/* Weekdays */}
+              <div className="mb-2 grid grid-cols-7 text-center">
+                {WEEKDAYS.map((day) => (
+                  <span key={day} className="text-xs font-medium text-gray-400">
+                    {day}
+                  </span>
+                ))}
+              </div>
 
-              {Array.from(
-                {
-                  length: new Date(
-                    month.getFullYear(),
-                    month.getMonth() + 1,
-                    0,
-                  ).getDate(),
-                },
-                (_, index) => {
-                  const day = index + 1;
+              {/* Calendar days */}
+              <div className="grid grid-cols-7 gap-1 text-center">
+                {Array.from({ length: leadingEmptyCells }, (_, i) => (
+                  <div key={`empty-${i}`} />
+                ))}
 
-                  const date = new Date(
-                    month.getFullYear(),
-                    month.getMonth(),
-                    day,
-                  );
-
+                {Array.from({ length: daysInMonth }, (_, i) => {
+                  const day = i + 1;
+                  const date = new Date(year, monthIndex, day);
                   const dateKey = toDateKey(date);
 
                   // Openingstijden van deze specifieke dag
@@ -249,11 +224,11 @@ function AppointmentCalendar() {
                       )}
                     </button>
                   );
-                },
-              )}
+                })}
+              </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
       {/* Selected day appointments */}
       <div className="pt-3">
