@@ -1,9 +1,63 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useAppointments } from "../../hooks/useAppointments";
 import { useServices } from "../../hooks/useServices";
 import { useCustomers } from "../../hooks/useCustomers";
-import { CalendarDays, Clock } from "lucide-react";
+import { CalendarDays, ChevronLeft, ChevronRight, Clock } from "lucide-react";
 import { useSettings } from "../../hooks/useSettings";
+import type { Appointment } from "../../types/appointment";
+
+const toDateKey = (date: Date) => date.toLocaleDateString("sv-SE");
+
+const WEEKDAYS = ["Ma", "Di", "Wo", "Do", "Vr", "Za", "Zo"];
+
+function OpeningHoursCard({
+  enabled,
+  openTime,
+  closeTime,
+}: {
+  enabled: boolean;
+  openTime: string;
+  closeTime: string;
+}) {
+  const styles = enabled
+    ? {
+        card: "border-emerald-200 bg-emerald-50",
+        icon: "bg-emerald-100 text-emerald-700",
+        badge: "bg-emerald-100 text-emerald-700",
+      }
+    : {
+        card: "border-gray-200 bg-gray-100",
+        icon: "bg-gray-200 text-gray-500",
+        badge: "bg-gray-200 text-gray-600",
+      };
+
+  return (
+    <div
+      className={`mb-4 flex items-center justify-between rounded-lg border p-3 ${styles.card}`}
+    >
+      <div className="flex items-center gap-3">
+        <div
+          className={`flex h-9 w-9 items-center justify-center rounded-lg ${styles.icon}`}
+        >
+          <Clock size={18} />
+        </div>
+
+        <div>
+          <p className="text-sm font-medium text-gray-700">Openingstijden</p>
+          <p className="text-sm text-gray-600">
+            {enabled ? `${openTime} - ${closeTime}` : "Gesloten"}
+          </p>
+        </div>
+      </div>
+
+      <span
+        className={`rounded-full px-3 py-1 text-xs font-semibold ${styles.badge}`}
+      >
+        {enabled ? "Geopend" : "Gesloten"}
+      </span>
+    </div>
+  );
+}
 
 function AppointmentCalendar() {
   const [currentDate, setCurrentDate] = useState(new Date());
@@ -12,34 +66,33 @@ function AppointmentCalendar() {
   const { customers } = useCustomers();
   const { services } = useServices();
   const { openingHours } = useSettings();
-  const today = new Date();
+
+  const todayKey = toDateKey(new Date());
+  const selectedKey = selectedDate ? toDateKey(selectedDate) : null;
 
   const selectedDayOpeningHours = selectedDate
     ? openingHours.days.find((day) => day.day === selectedDate.getDay())
     : undefined;
 
-  const getAppointmentCount = (date: Date) => {
-    const dateString = [
-      date.getFullYear(),
-      String(date.getMonth() + 1).padStart(2, "0"),
-      String(date.getDate()).padStart(2, "0"),
-    ].join("-");
+  const appointmentsByDate = useMemo(() => {
+    const map = new Map<string, Appointment[]>();
 
-    return appointments.filter((appointment) => appointment.date === dateString)
-      .length;
-  };
+    for (const appointment of appointments) {
+      const list = map.get(appointment.date);
+      if (list) list.push(appointment);
+      else map.set(appointment.date, [appointment]);
+    }
 
-  const selectedAppointments = appointments.filter((appointment) => {
-    if (!selectedDate) return false;
+    for (const list of map.values()) {
+      list.sort((a, b) => a.time.localeCompare(b.time));
+    }
 
-    const appointmentDate = [
-      selectedDate.getFullYear(),
-      String(selectedDate.getMonth() + 1).padStart(2, "0"),
-      String(selectedDate.getDate()).padStart(2, "0"),
-    ].join("-");
+    return map;
+  }, [appointments]);
 
-    return appointment.date === appointmentDate;
-  });
+  const selectedAppointments = selectedKey
+    ? (appointmentsByDate.get(selectedKey) ?? [])
+    : [];
 
   const months = Array.from({ length: 3 }, (_, index) => {
     return new Date(
@@ -49,17 +102,8 @@ function AppointmentCalendar() {
     );
   });
 
-  const goToPreviousMonths = () => {
-    setCurrentDate(
-      new Date(currentDate.getFullYear(), currentDate.getMonth() - 3, 1),
-    );
-  };
-
-  const goToNextMonths = () => {
-    setCurrentDate(
-      new Date(currentDate.getFullYear(), currentDate.getMonth() + 3, 1),
-    );
-  };
+  const changeMonths = (offset: number) =>
+    setCurrentDate((d) => new Date(d.getFullYear(), d.getMonth() + offset, 1));
 
   return (
     <div className="rounded-xl border border-gray-200 bg-gray-50 p-4 shadow-sm">
@@ -78,18 +122,18 @@ function AppointmentCalendar() {
         <div className="flex items-center gap-2">
           <button
             type="button"
-            onClick={goToPreviousMonths}
-            className="rounded-lg border border-gray-200 px-2 text-gray-600 transition hover:bg-gray-100"
+            onClick={() => changeMonths(-3)}
+            className="rounded-lg border border-gray-200 p-2 text-gray-600 transition hover:bg-gray-100"
           >
-            ‹
+            <ChevronLeft size={18} />
           </button>
 
           <button
             type="button"
-            onClick={goToNextMonths}
-            className="rounded-lg border border-gray-200 px-2 text-gray-600 transition hover:bg-gray-100"
+            onClick={() => changeMonths(3)}
+            className="rounded-lg border border-gray-200 p-2 text-gray-600 transition hover:bg-gray-100"
           >
-            ›
+            <ChevronRight size={18} />
           </button>
         </div>
       </div>
@@ -115,7 +159,7 @@ function AppointmentCalendar() {
 
             {/* Weekdays */}
             <div className="mb-2 grid grid-cols-7 text-center">
-              {["Ma", "Di", "Wo", "Do", "Vr", "Za", "Zo"].map((day) => (
+              {WEEKDAYS.map((day) => (
                 <span key={day} className="text-xs font-medium text-gray-400">
                   {day}
                 </span>
@@ -157,6 +201,8 @@ function AppointmentCalendar() {
                     day,
                   );
 
+                  const dateKey = toDateKey(date);
+
                   // Openingstijden van deze specifieke dag
                   const dayOpeningHours = openingHours.days.find(
                     (openingDay) => openingDay.day === date.getDay(),
@@ -164,17 +210,11 @@ function AppointmentCalendar() {
 
                   const isClosed = dayOpeningHours?.enabled === false;
 
-                  const isSelected =
-                    selectedDate?.getFullYear() === date.getFullYear() &&
-                    selectedDate?.getMonth() === date.getMonth() &&
-                    selectedDate?.getDate() === date.getDate();
+                  const isSelected = dateKey === selectedKey;
+                  const isToday = dateKey === todayKey;
 
-                  const isToday =
-                    today.getFullYear() === date.getFullYear() &&
-                    today.getMonth() === date.getMonth() &&
-                    today.getDate() === date.getDate();
-
-                  const appointmentCount = getAppointmentCount(date);
+                  const appointmentCount =
+                    appointmentsByDate.get(dateKey)?.length ?? 0;
                   const hasAppointments = appointmentCount > 0;
 
                   return (
@@ -227,49 +267,15 @@ function AppointmentCalendar() {
               })
             : "Selecteer een dag"}
         </h3>
-        {selectedDate && selectedDayOpeningHours && (
-          <div
-            className={`mb-4 flex items-center justify-between rounded-lg border p-3 ${
-              selectedDayOpeningHours.enabled
-                ? "border-emerald-200 bg-emerald-50"
-                : "border-gray-200 bg-gray-100"
-            }`}
-          >
-            <div className="flex items-center gap-3">
-              <div
-                className={`flex h-9 w-9 items-center justify-center rounded-lg ${
-                  selectedDayOpeningHours.enabled
-                    ? "bg-emerald-100 text-emerald-700"
-                    : "bg-gray-200 text-gray-500"
-                }`}
-              >
-                <Clock size={18} />
-              </div>
 
-              <div>
-                <p className="text-sm font-medium text-gray-700">
-                  Openingstijden
-                </p>
-
-                <p className="text-sm text-gray-600">
-                  {selectedDayOpeningHours.enabled
-                    ? `${selectedDayOpeningHours.openTime} - ${selectedDayOpeningHours.closeTime}`
-                    : "Gesloten"}
-                </p>
-              </div>
-            </div>
-
-            <span
-              className={`rounded-full px-3 py-1 text-xs font-semibold ${
-                selectedDayOpeningHours.enabled
-                  ? "bg-emerald-100 text-emerald-700"
-                  : "bg-gray-200 text-gray-600"
-              }`}
-            >
-              {selectedDayOpeningHours.enabled ? "Geopend" : "Gesloten"}
-            </span>
-          </div>
+        {selectedDayOpeningHours && (
+          <OpeningHoursCard
+            enabled={selectedDayOpeningHours.enabled}
+            openTime={selectedDayOpeningHours.openTime}
+            closeTime={selectedDayOpeningHours.closeTime}
+          />
         )}
+
         {!selectedDate ? (
           <p className="text-sm text-gray-500">
             Klik op een dag in de kalender om de afspraken te bekijken.
@@ -280,38 +286,36 @@ function AppointmentCalendar() {
           </p>
         ) : (
           <div className="space-y-3">
-            {selectedAppointments
-              .sort((a, b) => a.time.localeCompare(b.time))
-              .map((appointment) => {
-                const customer = customers.find(
-                  (customer) => customer.id === appointment.customerId,
-                );
+            {selectedAppointments.map((appointment) => {
+              const customer = customers.find(
+                (customer) => customer.id === appointment.customerId,
+              );
 
-                const service = services.find(
-                  (service) => service.id === appointment.serviceId,
-                );
+              const service = services.find(
+                (service) => service.id === appointment.serviceId,
+              );
 
-                return (
-                  <div
-                    key={appointment.id}
-                    className="flex items-center gap-4 rounded-lg border border-gray-100 p-3"
-                  >
-                    <div className="rounded-lg bg-blue-50 px-3 py-2 text-sm font-semibold text-blue-700">
-                      {appointment.time}
-                    </div>
-
-                    <div className="min-w-0 flex-1">
-                      <p className="truncate text-sm font-medium text-gray-800">
-                        {customer?.name ?? "Onbekende klant"}
-                      </p>
-
-                      <p className="text-xs text-gray-500">
-                        {service?.name ?? "Onbekende dienst"}
-                      </p>
-                    </div>
+              return (
+                <div
+                  key={appointment.id}
+                  className="flex items-center gap-4 rounded-lg border border-gray-100 p-3"
+                >
+                  <div className="rounded-lg bg-blue-50 px-3 py-2 text-sm font-semibold text-blue-700">
+                    {appointment.time}
                   </div>
-                );
-              })}
+
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-medium text-gray-800">
+                      {customer?.name ?? "Onbekende klant"}
+                    </p>
+
+                    <p className="text-xs text-gray-500">
+                      {service?.name ?? "Onbekende dienst"}
+                    </p>
+                  </div>
+                </div>
+              );
+            })}
           </div>
         )}
       </div>
