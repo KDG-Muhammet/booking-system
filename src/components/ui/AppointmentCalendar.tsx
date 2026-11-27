@@ -4,11 +4,50 @@ import { useServices } from "../../hooks/useServices";
 import { useCustomers } from "../../hooks/useCustomers";
 import { CalendarDays, ChevronLeft, ChevronRight, Clock } from "lucide-react";
 import { useSettings } from "../../hooks/useSettings";
-import type { Appointment } from "../../types/appointment";
+import { AppointmentStatus, type Appointment } from "../../types/appointment";
+import { toMinutes } from "../../utils/timeSlots";
 
 const toDateKey = (date: Date) => date.toLocaleDateString("sv-SE");
 
 const WEEKDAYS = ["Ma", "Di", "Wo", "Do", "Vr", "Za", "Zo"];
+
+type Availability = "closed" | "full" | "low" | "medium" | "high";
+
+function getAvailability(
+  openMinutes: number,
+  bookedMinutes: number,
+): Availability {
+  if (openMinutes <= 0) return "closed";
+
+  const freeRatio = Math.max(0, 1 - bookedMinutes / openMinutes);
+
+  if (freeRatio === 0) return "full"; // niets meer vrij
+  if (freeRatio <= 0.25) return "low"; // 25% of minder vrij
+  if (freeRatio <= 0.5) return "medium"; // 25-50% vrij
+  return "high"; // meer dan de helft vrij
+}
+
+// [kleuren] één plek voor alle kleuren
+const AVAILABILITY_STYLES: Record<Availability, string> = {
+  closed: "bg-gray-200 text-gray-500 hover:bg-gray-300",
+  full: "bg-red-200 text-red-800 hover:bg-red-300",
+  low: "bg-orange-200 text-orange-800 hover:bg-orange-300",
+  medium: "bg-amber-100 text-amber-800 hover:bg-amber-200",
+  high: "bg-emerald-100 text-emerald-700 hover:bg-emerald-200",
+};
+
+function getDayClass(state: {
+  isSelected: boolean;
+  isToday: boolean;
+  availability: Availability;
+}) {
+  if (state.isSelected) return "bg-blue-600 font-semibold text-white";
+
+  const base = AVAILABILITY_STYLES[state.availability];
+  return state.isToday
+    ? `${base} border-2 border-blue-600 font-semibold`
+    : base;
+}
 
 function OpeningHoursCard({
   enabled,
@@ -89,6 +128,23 @@ function AppointmentCalendar() {
 
     return map;
   }, [appointments]);
+
+  // geboekte minuten per dag
+  const bookedMinutesByDate = useMemo(() => {
+    const durations = new Map(services.map((s) => [s.id, s.duration]));
+    const map = new Map<string, number>();
+
+    for (const appointment of appointments) {
+      if (appointment.status === AppointmentStatus.Cancelled) continue;
+
+      const duration = durations.get(appointment.serviceId);
+      if (!duration) continue;
+
+      map.set(appointment.date, (map.get(appointment.date) ?? 0) + duration);
+    }
+
+    return map;
+  }, [appointments, services]);
 
   const selectedAppointments = selectedKey
     ? (appointmentsByDate.get(selectedKey) ?? [])
@@ -183,8 +239,6 @@ function AppointmentCalendar() {
                     (openingDay) => openingDay.day === date.getDay(),
                   );
 
-                  const isClosed = dayOpeningHours?.enabled === false;
-
                   const isSelected = dateKey === selectedKey;
                   const isToday = dateKey === todayKey;
 
@@ -192,22 +246,24 @@ function AppointmentCalendar() {
                     appointmentsByDate.get(dateKey)?.length ?? 0;
                   const hasAppointments = appointmentCount > 0;
 
+                  const openMinutes = dayOpeningHours?.enabled
+                    ? toMinutes(dayOpeningHours.closeTime) -
+                      toMinutes(dayOpeningHours.openTime)
+                    : 0;
+
+                  const availability = getAvailability(
+                    openMinutes,
+                    bookedMinutesByDate.get(dateKey) ?? 0,
+                  );
+
                   return (
                     <button
                       key={day}
                       type="button"
                       onClick={() => setSelectedDate(date)}
-                      className={`relative mx-auto flex h-8 w-full items-center justify-center rounded-lg text-xs transition ${
-                        isSelected
-                          ? "bg-blue-600 font-semibold text-white"
-                          : isToday
-                            ? "border border-blue-600 bg-emerald-100 font-semibold text-blue-700"
-                            : hasAppointments
-                              ? "bg-blue-100 font-semibold text-blue-700 hover:bg-blue-200"
-                              : isClosed
-                                ? "bg-gray-200 font-medium text-gray-500 hover:bg-gray-300"
-                                : "bg-emerald-100 text-emerald-700 hover:bg-emerald-100"
-                      }`}
+                      className={`relative mx-auto flex h-8 w-full items-center justify-center rounded-lg text-xs transition ${getDayClass(
+                        { isSelected, isToday, availability },
+                      )}`}
                     >
                       <span>{day}</span>
 
@@ -229,6 +285,30 @@ function AppointmentCalendar() {
             </div>
           );
         })}
+      </div>
+
+      {/* [kleuren] legenda */}
+      <div className="mt-3 flex flex-wrap gap-3 text-xs text-gray-600">
+        <span className="flex items-center gap-1">
+          <span className="h-3 w-3 rounded bg-emerald-100" /> Veel plaats
+        </span>
+        <span className="flex items-center gap-1">
+          <span className="h-3 w-3 rounded bg-amber-100" /> Half vol
+        </span>
+        <span className="flex items-center gap-1">
+          <span className="h-3 w-3 rounded bg-orange-200" /> Bijna vol
+        </span>
+        <span className="flex items-center gap-1">
+          <span className="h-3 w-3 rounded bg-red-200" /> Vol
+        </span>
+        <span className="flex items-center gap-1">
+          <span className="h-3 w-3 rounded bg-gray-200" /> Gesloten
+        </span>
+        <p className="text-xs text-gray-500">
+          Indicatie op basis van vrije tijd: een dag kan "bijna vol" zijn
+          terwijl er geen dienst meer past. De echte beschikbare tijden zie je
+          bij het inplannen.
+        </p>
       </div>
       {/* Selected day appointments */}
       <div className="pt-3">
